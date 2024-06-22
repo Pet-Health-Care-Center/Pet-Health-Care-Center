@@ -12,6 +12,7 @@ import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../../../Components/firebase/firebase";
 
@@ -71,6 +72,9 @@ const Sidebar = () => {
         break;
       case "/admin/addService":
         setSelected("Services Data");
+        break;
+      case "/admin/refundData":
+        setSelected("Refund Data");
         break;
       case "/admin/calendar":
         setSelected("Calendar");
@@ -187,10 +191,19 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+
             <Item
               title="Services Data"
               to="/admin/addService"
               icon={<MedicalServicesIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
+            <Item
+              title="Refund Data"
+              to="/admin/refundData"
+              icon={<CurrencyExchangeIcon />}
               selected={selected}
               setSelected={setSelected}
             />

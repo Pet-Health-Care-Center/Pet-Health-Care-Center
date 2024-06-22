@@ -107,8 +107,8 @@ function Team() {
       updates.accountBalance = row.accountBalance;
       localStorage.setItem("accountBalance", row.accountBalance);
     }
-    if (row.phone){
-        updates.phone = row.phone;
+    if (row.phone) {
+      updates.phone = row.phone;
     }
     if (row.role) {
       updates.role = row.role;
@@ -164,12 +164,10 @@ function Team() {
     setLoading(true);
 
     try {
-      // Update user status in the database
       await update(ref(getDatabase(), `users/${id}`), {
         accountStatus: "enable",
       });
 
-      // Update row in state
       setRows(
         rows.map((item) =>
           item.id === id ? { ...item, accountStatus: "enable" } : item
@@ -188,12 +186,10 @@ function Team() {
     setLoading(true);
 
     try {
-      // Update user status in the database
       await update(ref(getDatabase(), `users/${id}`), {
         accountStatus: "disabled",
       });
 
-      // Update row in state
       setRows(
         rows.map((item) =>
           item.id === id ? { ...item, accountStatus: "disabled" } : item

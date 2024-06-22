@@ -39,7 +39,10 @@ const Dashboard = () => {
       for (const bookingId in user.bookings) {
         const booking = user.bookings[bookingId];
 
-        if (!["Paid", "Checked-in", "Rated"].includes(booking.status)) continue;
+        if (
+          !["Paid", "Checked-in", "Rated", "Cancelled"].includes(booking.status)
+        )
+          continue;
 
         let inputStr = booking.bookingId;
         let strippedStr = inputStr.slice(2);
@@ -47,12 +50,18 @@ const Dashboard = () => {
         let month = strippedStr.slice(2, 4);
         let formattedDate = `${currentYear}-${month}-${day}`;
 
+        let bookingTotalPaid = booking.totalPaid || 0;
+
+        if (booking.status === "Cancelled") {
+          bookingTotalPaid *= 0.25;
+        }
+
         if (type === "date" && date === formattedDate) {
-          totalPaid += booking.totalPaid || 0;
+          totalPaid += bookingTotalPaid;
         } else if (type === "month" && formattedDate.startsWith(date)) {
-          totalPaid += booking.totalPaid || 0;
+          totalPaid += bookingTotalPaid;
         } else if (type === "year" && formattedDate.startsWith(date)) {
-          totalPaid += booking.totalPaid || 0;
+          totalPaid += bookingTotalPaid;
         }
       }
     });
@@ -167,7 +176,7 @@ const Dashboard = () => {
 
     updateRevenue();
 
-    const intervalId = setInterval(updateRevenue, 15000); 
+    const intervalId = setInterval(updateRevenue, 15000);
 
     return () => clearInterval(intervalId);
   }, [isCustomDateSelected, selectedDate]);
@@ -296,7 +305,7 @@ const Dashboard = () => {
         >
           <StatBox
             title={newUser}
-            subtitle="New User"
+            subtitle="New User this month"
             progress="0.80"
             increase="+43%"
             icon={
@@ -388,68 +397,71 @@ const Dashboard = () => {
             borderBottom={`4px solid ${colors.primary[500]}`}
             colors={colors.grey[100]}
             p="15px"
+            position="sticky"
+            top="0"
+            backgroundColor={colors.primary[400]}
           >
             <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
               Recent Transactions
             </Typography>
           </Box>
-          {mockTransactions.map((transaction, i) => (
-            <Box
-              key={`${transaction.bookingId}-${i}`}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              borderBottom={`4px solid ${colors.primary[500]}`}
-              p="15px"
-            >
-              <Box flex="1">
-                <Typography
-                  color={colors.greenAccent[500]}
-                  variant="h5"
-                  fontWeight="600"
-                  fontSize={"2rem"}
-                >
-                  {transaction.bookingID}
-                </Typography>
-                <Typography color={colors.grey[100]} fontSize={"2rem"}>
-                  {transaction.user}
-                </Typography>
-              </Box>
-              <Box flex="1" textAlign="center">
-                <Typography color={colors.grey[100]} fontSize={"2rem"}>
-                  {transaction.time + " " + transaction.date}
-                </Typography>
-              </Box>
-              <Box flex="1" textAlign="center">
-                <Typography
-                  color={
-                    transaction.status === "Cancelled"
-                      ? "red"
-                      : transaction.status === "Checked-in"
-                      ? colors.blueAccent[500]
-                      : transaction.status === "Rated"
-                      ? "yellow"
-                      : transaction.status === "Pending Payment"
-                      ? "rgb(255, 219, 194)"
-                      : colors.greenAccent[500]
-                  }
-                  fontSize={"2rem"}
-                >
-                  {transaction.status}
-                </Typography>
-              </Box>
+          {mockTransactions
+            .filter((transaction) => transaction.status !== "Cancelled")
+            .map((transaction, i) => (
               <Box
-                flex=".5"
-                textAlign="center"
-                backgroundColor={colors.greenAccent[500]}
-                p="5px 5px"
-                borderRadius="4px"
-                fontSize={"2rem"}
+                key={`${transaction.bookingId}-${i}`}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                borderBottom={`4px solid ${colors.primary[500]}`}
+                p="15px"
               >
-                ${transaction.cost}
+                <Box flex="1">
+                  <Typography
+                    color={colors.greenAccent[500]}
+                    variant="h5"
+                    fontWeight="600"
+                    fontSize={"2rem"}
+                  >
+                    {transaction.bookingID}
+                  </Typography>
+                  <Typography color={colors.grey[100]} fontSize={"2rem"}>
+                    {transaction.user}
+                  </Typography>
+                </Box>
+                <Box flex="1" textAlign="center">
+                  <Typography color={colors.grey[100]} fontSize={"2rem"}>
+                    {transaction.time + " " + transaction.date}
+                  </Typography>
+                </Box>
+                <Box flex="1" textAlign="center">
+                  <Typography
+                    color={
+                      transaction.status === "Checked-in"
+                        ? colors.blueAccent[500]
+                        : transaction.status === "Rated"
+                        ? "yellow"
+                        : transaction.status === "Pending Payment"
+                        ? "rgb(255, 219, 194)"
+                        : colors.greenAccent[500]
+                    }
+                    fontSize={"2rem"}
+                  >
+                    {transaction.status}
+                  </Typography>
+                </Box>
+                <Box
+                  flex=".5"
+                  textAlign="center"
+                  backgroundColor={colors.greenAccent[500]}
+                  p="5px 5px"
+                  borderRadius="4px"
+                  fontSize={"2rem"}
+                >
+                  ${transaction.cost}
+                </Box>
               </Box>
-            </Box>
-          ))}
+            ))}
         </Box>
         {/* <Box
           gridColumn="span 4"

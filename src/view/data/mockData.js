@@ -7,6 +7,7 @@ let updatedDataTeam = [];
 export let mockDataTeam = [];
 export let mockPieData = [];
 export let mockBarData = [];
+export let mockWithdrawData = [];
 export let mockTransactions = [];
 export let mockLineData = [
   {
@@ -43,7 +44,7 @@ const getMockTransactions = () => {
         let minute = strippedStr.slice(6, 8);
         let second = strippedStr.slice(8, 10);
         let formattedDate = `${currentYear}-${month}-${day}T${hour}:${minute}:${second}`;
-
+        // console.log("a" + formattedDate);
         transactions.push({
           bookingID: booking.bookingId,
           user: user.username,
@@ -52,6 +53,7 @@ const getMockTransactions = () => {
           formattedDate: formattedDate,
           status: booking.status,
           cost: booking.totalPaid || 0,
+          feeOfCancellation: booking.feeOfCancellation,
         });
       } else {
         console.warn(
@@ -66,6 +68,47 @@ const getMockTransactions = () => {
   );
 
   return transactions;
+};
+
+const getMockWithdrawData = () => {
+  let withdrawList = [];
+
+  mockDataTeam.forEach((user) => {
+    for (const refundMoneyId in user.refundMoney) {
+      if (user.refundMoney.hasOwnProperty(refundMoneyId)) {
+        const withdraw = user.refundMoney[refundMoneyId];
+        let inputStr = withdraw.date;
+
+        const [datePart, timePart] = inputStr.split(/[,\s]+/);
+        const [month, day, year] = datePart.split("/");
+        const [hour, minute, second] = timePart.split(":");
+
+        let formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(
+          2,
+          "0"
+        )}T${hour}:${minute}:${second}`;
+
+        withdrawList.push({
+          accountNumber: withdraw.accountNumber,
+          amount: withdraw.amount,
+          bank: withdraw.bank,
+          date: withdraw.date,
+          formattedDate: formattedDate,
+          isRefund: withdraw.isRefund,
+        });
+      } else {
+        console.warn(
+          `Skipping booking with undefined bookingId for user: ${user.username}`
+        );
+      }
+    }
+  });
+
+  withdrawList.sort(
+    (a, b) => new Date(a.formattedDate) - new Date(b.formattedDate)
+  );
+
+  return withdrawList;
 };
 
 const fetchUsers = () => {
@@ -86,6 +129,7 @@ const fetchUsers = () => {
               id: userId,
               ...user,
               bookings: bookings,
+              refundMoney: user.refundMoney,
             });
           }
         }
@@ -93,13 +137,15 @@ const fetchUsers = () => {
         mockDataTeam = updatedDataTeam;
         mockTransactions = getMockTransactions();
         getMockLineData();
+        mockWithdrawData = getMockWithdrawData();
         mockPieData = getMockPieData();
         mockBarData = getMockBarData();
       } else {
         console.log("No data available");
       }
     },
-    (error) => {console.error("Error fetching data: ", error);
+    (error) => {
+      console.error("Error fetching data: ", error);
     }
   );
 };
@@ -184,7 +230,8 @@ const getMockBarData = () => {
             bookingDate.getMonth() === month
           ) {
             booking.services.forEach((serviceName) => {
-              if (serviceName === "Pet Veterinary") serviceName = "Pet_Veterinary";
+              if (serviceName === "Pet Veterinary")
+                serviceName = "Pet_Veterinary";
               if (serviceName === "Check-up") serviceName = "Check_up";
               monthData[serviceName]++;
             });
