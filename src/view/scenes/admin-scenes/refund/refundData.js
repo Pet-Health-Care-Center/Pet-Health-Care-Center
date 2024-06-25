@@ -132,7 +132,7 @@ const RefundData = () => {
             })} VND`}
             subtitle="Fee Today"
             progress="null"
-            icon={<AttachMoneyIcon />}
+            icon={<AttachMoneyIcon  sx={{fontSize: "26px"}}/>}
           />
         </Box>
 
@@ -149,7 +149,7 @@ const RefundData = () => {
             })} VND`}
             subtitle="Total withdrawn"
             progress="null"
-            icon={<CurrencyExchangeIcon />}
+            icon={<CurrencyExchangeIcon sx={{fontSize: "26px"}}/>}
           />
         </Box>
 
@@ -166,7 +166,7 @@ const RefundData = () => {
             })} VND`}
             subtitle="Total of Fee"
             progress="null"
-            icon={<AttachMoneyIcon />}
+            icon={<AttachMoneyIcon sx={{fontSize: "26px"}}/>}
           />
         </Box>
 

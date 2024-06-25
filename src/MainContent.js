@@ -73,7 +73,7 @@ function MainContent() {
               <Route path="/account" element={<Update user={userRef.current}/>} />
               <Route path="/admin/*" element={<Admin />} />
               <Route path="/vet/*" element={<Vet />} />
-              <Route path="/manager" element={<Manager />} />
+              <Route path="/manager/*" element={<Manager />} />
               <Route path="/pet" element={<Pet />} />
               <Route path="/pet/add" element={<AddPet />} />
               <Route path="/pet/add/details" element={<AddPetNext />} />

@@ -11,7 +11,7 @@ export let mockWithdrawData = [];
 export let mockTransactions = [];
 export let mockLineData = [
   {
-    id: "User",
+    id: " ",
     color: tokens("dark").greenAccent[500],
     data: Array.from({ length: 12 }, (_, i) => ({
       x: (i + 1).toString(),
