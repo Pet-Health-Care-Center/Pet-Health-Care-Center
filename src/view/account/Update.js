@@ -204,6 +204,7 @@ function Update() {
                 top: "120px",
                 left: "0",
                 cursor: "pointer",
+                zIndex: "1000"
               }}
             >
               <FontAwesomeIcon

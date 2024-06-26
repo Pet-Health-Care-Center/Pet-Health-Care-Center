@@ -4,17 +4,23 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
-import { Box } from "@mui/material";
+import { Box, Typography, List, ListItem, ListItemText, useTheme } from "@mui/material";
 import { getDatabase, ref, onValue, get } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import Header from "../../../../Components/dashboardChart/Header";
 import { ToastContainer, toast } from "react-toastify";
+import Clock from 'react-live-clock';
+import { tokens } from "../../../../theme";
 
 const Schedule = () => {
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
   const [currentEvents, setCurrentEvents] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const auth = getAuth();
   const navigate = useNavigate();
+  
 
   const convertScheduleToEvents = (schedule) => {
     const events = [];
@@ -115,11 +121,61 @@ const Schedule = () => {
     }
   };
 
+  const filterEventsByDate = (events, date) => {
+    return events.filter(event => event.start.split('T')[0] === date);
+  };
+
+  const todaysEvents = filterEventsByDate(currentEvents, selectedDate);
+
+
   return (
     <Box m="20px">
-      <Header title="Calendar" subtitle="Full Calendar Interactive Page" />
-
+      <Header title="Schedule" subtitle="All Bookings and Schedules are here!" />
+      <div className="countdown">
+        <div className="box">
+          <span className="num">
+            <Clock format={'HH'} ticking={true} timezone={'Asia/Ho_Chi_Minh'} />
+          </span>
+          <span className="text">Hours</span>
+        </div>
+        <div className="box">
+          <span className="num">
+            <Clock format={'mm'} ticking={true} timezone={'Asia/Ho_Chi_Minh'} />
+          </span>
+          <span className="text">Minutes</span>
+        </div>
+        <div className="box">
+          <span className="num">
+            <Clock format={'ss'} ticking={true} timezone={'Asia/Ho_Chi_Minh'} />
+          </span>
+          <span className="text">Seconds</span>
+        </div>
+      </div>
       <Box display="flex" justifyContent="space-between">
+      <Box flex="1 1 20%" backgroundColor={colors.primary[400]} p="15px" borderRadius="4px">
+          <Typography variant="h5">Events</Typography>
+          <List>
+            {todaysEvents.map((event) => (
+              <ListItem
+                key={event.id}
+                sx={{
+                  backgroundColor: colors.greenAccent[500],
+                  margin: "10px 0",
+                  borderRadius: "2px",
+                }}
+              >
+                <ListItemText
+                  primary={event.title}
+                  secondary={
+                    <Typography>
+                      {event.start.split('T')[1] ? event.start.split('T')[1].slice(0, 5) : "All Day"}
+                    </Typography>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
         <Box flex="1 1 100%" ml="15px">
           <FullCalendar
             height="75vh"
@@ -145,3 +201,4 @@ const Schedule = () => {
 };
 
 export default Schedule;
+

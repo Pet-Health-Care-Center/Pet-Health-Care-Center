@@ -112,7 +112,7 @@ function Admin() {
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="team" element={<Team />} />
-              <Route path="addService" element={<Service />} />
+              <Route path="addData" element={<Service />} />
               <Route path="form" element={<Form />} />
               <Route path="bar" element={<Bar />} />
               <Route path="pie" element={<Pie />} />

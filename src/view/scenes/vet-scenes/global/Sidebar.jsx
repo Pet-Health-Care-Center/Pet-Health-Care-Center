@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -49,6 +49,7 @@ const Sidebar = () => {
   const [selected, setSelected] = useState("Dashboard");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -64,6 +65,25 @@ const Sidebar = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    switch (location.pathname) {
+      case "/vet/dashboard":
+        setSelected("Dashboard");
+        break;
+      case "/vet/schedule":
+        setSelected("Schedule");
+        break;
+      case "/vet/managerSchedule":
+        setSelected("Manager Schedule");
+        break;
+      case "/vet/booking":
+        setSelected("Booking");
+        break;
+      default:
+        setSelected("Dashboard");
+    }
+  }, [location.pathname]);
 
   return (
     <Box
@@ -169,6 +189,13 @@ const Sidebar = () => {
             <Item
               title="Schedule"
               to="/vet/schedule"
+              icon={<PeopleOutlinedIcon sx={{ fontSize: "22px" }} />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="Manager Schedule"
+              to="/vet/managerSchedule"
               icon={<PeopleOutlinedIcon sx={{ fontSize: "22px" }} />}
               selected={selected}
               setSelected={setSelected}

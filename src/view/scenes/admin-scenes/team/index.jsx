@@ -442,9 +442,10 @@ function Team() {
         display="flex"
         backgroundColor={colors.primary[400]}
         borderRadius="3px"
+        width={300}
       >
         <InputBase
-          sx={{ ml: 2, flex: 1 }}
+          sx={{ ml: 2, flex: 1, fontSize: "20px" }}
           placeholder="Search by email"
           value={searchQuery}
           onChange={handleSearch}
@@ -455,9 +456,7 @@ function Team() {
       </Box>
       <Box
         m="40px 0 0 0"
-        height="70vh"
-        display="flex"
-        overflow="auto"
+        height="40vh"
         sx={{
           "& .MuiDataGrid-root": {
             border: "none",

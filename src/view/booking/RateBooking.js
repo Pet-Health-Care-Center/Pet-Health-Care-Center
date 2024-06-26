@@ -54,6 +54,7 @@ const RatingBooking = () => {
   const [fontWeight, setFontWeight] = React.useState("normal");
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [username, setUsername] = useState("");
+  const [avatar, setAvatar] = useState("");
   const forceUpdate = useForceUpdate();
   const user = auth.currentUser;
 
@@ -64,14 +65,14 @@ const RatingBooking = () => {
 
       onValue(userRef, (snapshot) => {
         const data = snapshot.val();
-
         if (data) {
           setUsername(data.username);
+          setAvatar(data.avatar)
         }
       });
     }
   }, [user]);
-
+  
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
@@ -113,7 +114,10 @@ const RatingBooking = () => {
         rating,
         review,
         status: "Rated",
+        petOwner: {
         username: username,
+          avatar: avatar
+        }
       });
       toast.success("Rating submitted successfully!", {
         autoClose: 1500,

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookingContext } from "../../Components/context/BookingContext";
-import { getDatabase, ref, get } from "firebase/database";
+import { getDatabase, ref, get, onValue } from "firebase/database";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -46,20 +46,22 @@ const SelectDateTime = () => {
   }, [selectedPet, selectedServices, navigate]);
 
   useEffect(() => {
-    const fetchVets = async () => {
+    const fetchVets = () => {
       const db = getDatabase();
       const vetsRef = ref(db, "users");
-      const snapshot = await get(vetsRef);
-      const vetsData = snapshot.val();
-      const vetsList = Object.keys(vetsData)
-        .filter((uid) => vetsData[uid].role === "veterinarian")
-        .map((uid) => ({
-          uid,
-          name: vetsData[uid].fullname,
-          schedule: vetsData[uid].schedule || {},
-          specialization: vetsData[uid].specialization,
-        }));
-      setVets(vetsList);
+
+      onValue(vetsRef, (snapshot) => {
+        const vetsData = snapshot.val();
+        const vetsList = Object.keys(vetsData)
+          .filter((uid) => vetsData[uid].role === "veterinarian")
+          .map((uid) => ({
+            uid,
+            name: vetsData[uid].fullname,
+            schedule: vetsData[uid].schedule || {},
+            specialization: vetsData[uid].specialization,
+          }));
+        setVets(vetsList);
+      });
     };
 
     fetchVets();

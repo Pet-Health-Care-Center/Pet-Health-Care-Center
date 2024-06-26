@@ -115,6 +115,7 @@ function Home() {
       onValue(userRef, (snapshot) => {
         const data = snapshot.val();
 
+        console.log(data)
         if (data) {
           setAvatar(data.avatar)
         }
@@ -264,7 +265,7 @@ function Home() {
         <div className="testimonial-box">
           <img
             className="testimonial-avatar"
-            src={avatar}
+            src={booking.petOwner.avatar}
             alt="User Avatar"
           />
           <div className="testimonial-content">
@@ -308,7 +309,7 @@ function Home() {
               {booking.review}
             </div>
             <p className="testimonial-signature">
-              {booking.username}, {booking.pet.name}
+              {booking.petOwner.username}, {booking.pet.name}
             </p>
           </div>
         </div>

@@ -23,6 +23,9 @@ import {
 } from "firebase/database";
 import useForceUpdate from "../../hooks/useForceUpdate";
 import ReCAPTCHA from "react-google-recaptcha";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+
 
 function SignIn() {
   const [email, setEmail] = useState("");
@@ -43,6 +46,10 @@ function SignIn() {
   const [avatar, setAvatar] = useState(
     "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png"
   );
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+
   // console.log(avatar)
   function addDataBase(userId, email, name, role) {
     const db = getDatabase();
@@ -122,7 +129,7 @@ function SignIn() {
           isVerified: true,
           accountBalance: accountBalance,
           accountStatus: userData.accountStatus || accountStatus,
-          creationTime: userData.creationTime || creationTime, 
+          creationTime: userData.creationTime || creationTime,
           avatar: userData.avatar || avatar,
         });
 
@@ -406,6 +413,12 @@ function SignIn() {
     setIsInactive(false);
     resetInactivityTimer();
   };
+const togglePasswordVisibility = () => {
+    setShowPassword(prevState => !prevState);
+  };
+const togglePasswordConfirmVisibility = () => {
+    setShowConfirmPassword(prevState => !prevState);
+  };
 
   useEffect(() => {
     resetInactivityTimer();
@@ -434,39 +447,53 @@ function SignIn() {
                   value={email}
                   placeholder="Input your email"
                   onChange={(e) => {
-                    setEmail(e.target.value);
+                    setEmail(e.target.value || "");
                   }}
                   className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:indigo-600 shadow-sm rounded-lg transition duration-300"
                 />
-                <input
-                  id="password"
-                  disabled={isRegistering}
-                  placeholder="Input your password"
-                  type="password"
-                  autoComplete="off"
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                  }}
-                  className="mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg transition duration-300"
-                />
+                <div class="input-wrapper">
+                  <input
+                    id="password"
+                    disabled={isRegistering}
+                    placeholder="Input your password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="off"
+                    required
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value || "");
+                    }}
+                  />
+                  <div
+                    class="toggle-password"
+                    onClick={togglePasswordVisibility}
+                  >
+                   <FontAwesomeIcon id="toggleIcon" icon={showPassword ? faEyeSlash : faEye} />
+                  </div>
+                </div>
                 <div>
                   <label className="text-sm text-gray-600 font-bold">
                     Confirm Password
                   </label>
+                <div class="input-wrapper">
                   <input
                     disabled={isRegistering}
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
                     autoComplete="off"
                     required
                     value={confirmPassword}
                     onChange={(e) => {
-                      setconfirmPassword(e.target.value);
+                      setconfirmPassword(e.target.value || "");
                     }}
-                    className="w-full mt-2 px-3 py-2 text-gray-500 bg-transparent outline-none border focus:border-indigo-600 shadow-sm rounded-lg transition duration-300"
-                  />
+                    />
+                <div
+                    class="toggle-password"
+                    onClick={togglePasswordConfirmVisibility}
+                  >
+                   <FontAwesomeIcon id="toggleIcon" icon={showConfirmPassword ? faEyeSlash : faEye} />
+                  </div>
+                </div>
                 </div>
                 <button
                   type="submit"

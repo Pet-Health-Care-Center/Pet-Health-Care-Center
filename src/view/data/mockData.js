@@ -95,6 +95,10 @@ const getMockWithdrawData = () => {
           date: withdraw.date,
           formattedDate: formattedDate,
           isRefund: withdraw.isRefund,
+          username: withdraw.username,
+          userId: withdraw.userId,
+          mail: withdraw.email,
+          refundDay: ""
         });
       } else {
         console.warn(

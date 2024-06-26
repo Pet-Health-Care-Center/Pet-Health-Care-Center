@@ -414,14 +414,16 @@ const PetDetail = () => {
                     <div>{pet.breed || "N/A"}</div>
                   </div>
                   <div className="pet-info">
-                    <p>Gender:</p>
-                    <div>{pet.gender || "N/A"}</div>
+                    <p>Color:</p>
+                    <div>{pet.color || "N/A"}</div>
                   </div>
                 </div>
               </div>
               <div>
                 <div>
-                  <h2>Medical Record</h2>
+                  <h2 style={{
+                    margin: "24px 0px 12px 0px",
+                  }}>Medical Record</h2>
                   <div className="scrollable-container">
                     {medicalHistory &&
                       medicalHistory.map((record, index) => (
@@ -471,6 +473,9 @@ const PetDetail = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -479,6 +484,9 @@ const PetDetail = () => {
                   name="type"
                   value={formData.type}
                   onChange={handleTypeChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 >
                   <option value="">-- Select Your Pet Type --</option>
                   <option value="Cat">Cat</option>
@@ -492,6 +500,9 @@ const PetDetail = () => {
                   name="color"
                   value={formData.color}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -500,6 +511,9 @@ const PetDetail = () => {
                   name="breed"
                   value={formData.breed}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 >
                   {selectedBreeds.map((breed, index) => (
                     <option key={index} value={breed}>
@@ -515,6 +529,9 @@ const PetDetail = () => {
                   name="dob"
                   value={formData.dob}
                   onChange={handleDobChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -524,13 +541,20 @@ const PetDetail = () => {
                   name="weight"
                   value={formData.weight}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="button-group">
-                <button className="cancel-button" onClick={handleCancelClick}>
+                <button className="cancel-button" onClick={handleCancelClick}                   style={{
+                    zIndex: "10000000",
+                  }}>
                   Cancel
                 </button>
-                <button className="update-button" onClick={handleUpdateClick}>
+                <button                   style={{
+                    zIndex: "10000000",
+                  }} className="update-button" onClick={handleUpdateClick}>
                   Update
                 </button>
               </div>

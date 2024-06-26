@@ -159,7 +159,6 @@ function Header({ user, currentPath }) {
     !location.pathname.startsWith("/admin") &&
     !location.pathname.startsWith("/manager") &&
     !location.pathname.startsWith("/vet") &&
-    !location.pathname.startsWith("/booking-details") &&
     !location.pathname.startsWith("/rate-booking");
     
 

@@ -18,6 +18,7 @@ const useStyles = makeStyles({
     fontSize: "1.5rem",
     marginTop: "0",
     paddingBottom: "2rem",
+    marginBottom: "5rem",
     "& .MuiPaginationItem-root": {
       fontSize: "1.5rem",
       marginLeft: "2rem",
@@ -27,6 +28,7 @@ const useStyles = makeStyles({
       border: "1px solid var(--neon-color)",
       color: "#fff",
       transition: "all 0.3s ease",
+      marginBottom: "2rem",
       "&:hover": {
         backgroundColor: "#f0f0f0",
         borderColor: "#999",
@@ -49,14 +51,13 @@ const Pet = () => {
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const classes = useStyles();
   const { width } = useViewport(); // Get the viewport width
-
-  const [petsPerPage, setPetsPerPage] = useState(10); // Default value
+  const [petsPerPage, setPetsPerPage] = useState(8); // Default value
 
   useEffect(() => {
     if (width >= 1785) {
       setPetsPerPage(12);
     } else if (width >= 991 && width < 1600) {
-      setPetsPerPage(10);
+      setPetsPerPage(8);
     } else if (width >= 991 && width < 1600) {
       setPetsPerPage(5);
     } else {
@@ -197,7 +198,7 @@ const Pet = () => {
                   style={{
                     textAlign: "center",
                     marginBottom: "1rem",
-                    marginTop: "2rem",
+                    marginTop: "3rem",
                     fontSize: "3rem",
                   }}
                 >

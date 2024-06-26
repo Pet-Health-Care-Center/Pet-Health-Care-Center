@@ -45,13 +45,13 @@ const SelectPet = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const classes = useStyles();
   const { width } = useViewport();
-  const [petsPerPage, setPetsPerPage] = useState(10);
+  const [petsPerPage, setPetsPerPage] = useState(8);
 
   useEffect(() => {
     if (width >= 1785) {
       setPetsPerPage(12);
     } else if (width >= 991 && width < 1600) {
-      setPetsPerPage(10);
+      setPetsPerPage(8);
     } else if (width >= 991 && width < 1600) {
       setPetsPerPage(5);
     } else {
@@ -114,7 +114,7 @@ const SelectPet = () => {
 
   return (
     <div className="pet-page">
-      <div className="parent-container">
+      <div className="parent-container select-pet-container">
         <div className="pet-manage">
           {user ? (
             pets.length === 0 ? (

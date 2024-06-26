@@ -50,6 +50,9 @@ const ManageBookings = () => {
   const navigate = useNavigate();
   const classes = useStyles();
   const forceUpdate = useForceUpdate();
+  const [currentTab, setCurrentTab] = useState('Paid');
+
+
 
   useEffect(() => {
     if (!user) {
@@ -170,7 +173,6 @@ const ManageBookings = () => {
         await update(userRef, { accountBalance: updatedBalance });
         await set(vetScheduleRef, updatedSchedule);
 
-        // Sort the updated list so cancelled bookings are at the bottom
         setPaidBookings((prev) => {
           const updated = prev.map((booking) =>
             booking.key === confirmCancel.key
@@ -181,8 +183,6 @@ const ManageBookings = () => {
             (a, b) => statusToNumber(a.status) - statusToNumber(b.status)
           );
         });
-
-        // Show success message
         toast.success(
           "Cancelled successfully! Please check your booking section.",
           {
@@ -210,21 +210,33 @@ const ManageBookings = () => {
   const closeModal = () => {
     setConfirmCancel(null);
   };
+  const getCurrentBookings = () => {
+    switch (currentTab) {
+      case 'Paid':
+        return paidBookings.filter((booking) => booking.status === 'Paid');
+      case 'Checked-in':
+        return paidBookings.filter((booking) => booking.status === 'Checked-in');
+      case 'Rated':
+        return paidBookings.filter((booking) => booking.status === 'Rated');
+      case 'Cancelled':
+        return paidBookings.filter((booking) => booking.status === 'Cancelled');
+      default:
+        return paidBookings;
+    }
+  };
 
+  console.log(getCurrentBookings)
   const indexOfLastBooking = currentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
-  const currentPaidBookings = paidBookings.slice(
-    indexOfFirstBooking,
-    indexOfLastBooking
-  );
-  const currentUnpaidBookings = unpaidBookings.slice(
-    indexOfFirstBooking,
-    indexOfLastBooking
-  );
+
+  const currentBookings = getCurrentBookings().slice(indexOfFirstBooking, indexOfLastBooking);
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
+
+console.log(currentBookings)
+
 
   useEffect(() => {
     const applyStyles = () => {
@@ -237,24 +249,59 @@ const ManageBookings = () => {
 
   const getStatusClassName = (status) => {
     switch (status) {
-      case "Paid":
-        return "status-paid";
-      case "Pending Payment":
-        return "status-pending";
-      case "Checked-in":
-        return "status-checkedin";
-      case "Cancelled":
-        return "status-cancelled";
-      case "Rated":
-        return "status-rated";
+      case 'Paid':
+        return 'status-paid';
+      case 'Pending Payment':
+        return 'status-pending';
+      case 'Checked-in':
+        return 'status-checkedin';
+      case 'Cancelled':
+        return 'status-cancelled';
+      case 'Rated':
+        return 'status-rated';
       default:
-        return "";
+        return '';
     }
   };
+  const handleTabChange = (status) => {
+    setCurrentTab(status);
+    setCurrentPage(1); // Reset to the first page when changing tabs
+  };
+  const currentUnpaidBookings = unpaidBookings.slice(
+    indexOfFirstBooking,
+    indexOfLastBooking
+  );
+  console.log(getCurrentBookings())
 
   return (
     <div className="manage-bookings-page">
-      <h2 className="manage-bookings-title">Manage Bookings</h2>
+    <h2 className="manage-bookings-title">Manage Bookings</h2>
+    <div className="tabs">
+      <button
+        className={`tab-button ${currentTab === 'Paid' ? 'active' : ''}`}
+        onClick={() => handleTabChange('Paid')}
+      >
+        Paid
+      </button>
+      <button
+        className={`tab-button ${currentTab === 'Checked-in' ? 'active' : ''}`}
+        onClick={() => handleTabChange('Checked-in')}
+      >
+        Checked-in
+      </button>
+      <button
+        className={`tab-button ${currentTab === 'Rated' ? 'active' : ''}`}
+        onClick={() => handleTabChange('Rated')}
+      >
+        Rated
+      </button>
+      <button
+        className={`tab-button ${currentTab === 'Cancelled' ? 'active' : ''}`}
+        onClick={() => handleTabChange('Cancelled')}
+      >
+        Cancelled
+      </button>
+    </div>
       {showPaid ? (
         <div className="bookings-section">
           <h3>Paid Bookings</h3>
@@ -274,8 +321,8 @@ const ManageBookings = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentPaidBookings.length > 0 ? (
-                    currentPaidBookings.map((booking, index) => (
+                {currentBookings.length > 0 ? (
+                    currentBookings.map((booking, index) => (
                       <tr
                         key={booking.key}
                         className={
@@ -382,7 +429,7 @@ const ManageBookings = () => {
                   )}
                 </tbody>
               </table>
-              {paidBookings.length > bookingsPerPage && (
+              {getCurrentBookings().length > bookingsPerPage && (
                 <>
                   <div
                     style={{
@@ -393,10 +440,10 @@ const ManageBookings = () => {
                     }}
                   >
                     Page {currentPage} of{" "}
-                    {Math.ceil(paidBookings.length / bookingsPerPage)}
+                    {Math.ceil(getCurrentBookings().length / bookingsPerPage)}
                   </div>
                   <Pagination
-                    count={Math.ceil(paidBookings.length / bookingsPerPage)}
+                    count={Math.ceil(getCurrentBookings().length / bookingsPerPage)}
                     page={currentPage}
                     onChange={handlePageChange}
                     color="primary"
