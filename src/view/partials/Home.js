@@ -352,7 +352,7 @@ function Home() {
       </div>
       <section className="about" id="about">
         <div className="font_0" data-aos="fade-in">
-          <h3>Hi, I'm Dr. Mark Edwards</h3>
+          <h3>Veterinarians Of The Year</h3>
         </div>
 
         <div className="about-container">
@@ -361,59 +361,68 @@ function Home() {
               className="img-about"
               src="https://static.wixstatic.com/media/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg/v1/fill/w_513,h_513,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg"
               alt=""
-              width="410"
-              height="410"
               srcSet="https://static.wixstatic.com/media/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg/v1/fill/w_513,h_513,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg"
               fetchpriority="high"
             ></img>
           </div>
           <div className="about-text" data-aos="fade-left">
             <span className="text-about">
-              Over 16 Years of Veterinary Experience
+            Awarded for outstanding creative vision and innovation in game direction and design.
             </span>
             <p className="font_1">
               <span className="text1-about">
-                With over 16 years of experience working in the field of
-                veterinary medicine, I am a passionate veterinarian with a deep
-                understanding of the health and happiness of pet animals. I
-                graduated from Hanoi National University School of Medicine and
-                have worked at many reputable veterinary clinics and veterinary
-                hospitals throughout the area. Through thousands of animal
-                treatment and care cases, I have accumulated valuable experience
-                and diverse professional skills. I am always dedicated and
-                dedicated to caring for each patient, along with dedicated
-                understanding and advice to owners on how to care for and
-                protect their pets' health.
+              I am deeply honored to receive the "Veterinarians of the Year" award. 
+              I sincerely thank the organizers and colleagues for their trust and votes. 
+              Thank you to all pet owners for your continued trust and support. 
+              I am committed to continuing my dedication to providing the best veterinary care services. 
+              Sincerely, thank you!
               </span>
             </p>
           </div>
+          
         </div>
-        <div className="about-container">
+        <div style={{ marginTop: "10px", marginRight: "700px" }}>
+          <div className="name">Jonny Sin</div>
+                <div className="title" style={{ marginTop: "10px"}}>Sharp</div>
+                </div>
+        <div className="about-container2">
           <div className="about-text2" data-aos="fade-right">
-            <span className="text-about">
-              Over 16 Years of Veterinary Experience
+            <span className="text-about2">
+            There are also other doctors who have also made efforts this year
             </span>
-            <p className="font_1">
-              <span className="text1-about">
-                In addition to my daily work, I also regularly participate in
-                community education activities to share my knowledge and
-                experience with the community, while creating high awareness of
-                health issues and disease prevention for people. animal. My
-                mission is to bring peace and happiness to every family through
-                health care for their pets. With enthusiasm and extensive
-                knowledge, I am committed to continuing to contribute to the
-                development of the field of veterinary medicine and bring the
-                best care services to the community.
-              </span>
-            </p>
           </div>
-          <div className="about-image2" data-aos="fade-left">
-            <img
-              className="img-about"
-              src="https://static.wixstatic.com/media/84770f_e57bb42011fe4e91992f1ceeece2a7b3~mv2_d_4000_3947_s_4_2.jpg/v1/fill/w_526,h_519,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_e57bb42011fe4e91992f1ceeece2a7b3~mv2_d_4000_3947_s_4_2.jpg"
-              fetchpriority="high"
-            ></img>
-          </div>
+          <div className="testimonials-vet">
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat legam esse veniam culpa fore nisi cillum quid."</p>
+            </div>
+            <div className="profile">
+                <img src="https://via.placeholder.com/80" alt="John Larson"/>
+                <div className="name">John Larson</div>
+                <div className="title">Entrepreneur</div>
+            </div>
+        </div>
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper."</p>
+            </div>
+            <div className="profile">
+                <img src="https://via.placeholder.com/80" alt="Saul Goodman"/>
+                <div className="name">Saul Goodman</div>
+                <div className="title">CEO & Founder</div>
+            </div>
+        </div>
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa."</p>
+            </div>
+            <div className="profile">
+                <img src="https://via.placeholder.com/80" alt="Sara Wilsson"/>
+                <div className="name">Sara Wilsson</div>
+                <div className="title">Designer</div>
+            </div>
+        </div>
+    </div>
         </div>
         <div className="font_2" data-aos="zoom-in-up">
           <h3>What Our Happy Clients Say</h3>
@@ -676,7 +685,7 @@ function Home() {
               href="#home"
               onClick={homePage}
               className="logo"
-              style={{ textDecoration: "none", color: "#7b2cbf" }}
+              style={{ textDecoration: "none", color: "#CF0070" }}
             >
               <FontAwesomeIcon icon={faPaw} /> Pet Center
             </a>

@@ -72,10 +72,9 @@
     "web-vitals": "^2.1.4",
     "yup": "^1.4.0"
   },
-    "devDependencies": {
-      "@babel/plugin-proposal-private-property-in-object": "^7.14.5"
-    },
-
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.14.5"
+  },
   "scripts": {
     "preinstall": "npm config set legacy-peer-deps true",
     "start": "react-scripts start",

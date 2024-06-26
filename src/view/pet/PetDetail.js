@@ -347,7 +347,7 @@ const PetDetail = () => {
         minHeight: "100vh",
         position: "relative",
         width: "100%",
-        backgroundColor: "#EBEFF2",
+        background: "linear-gradient(to right, #fcecea, #fef7ed)",
         overflowY: "auto",
       }}
     >

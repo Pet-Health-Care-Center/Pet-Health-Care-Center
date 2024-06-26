@@ -2,14 +2,14 @@
 
 /* Define the new color palette */
 :root {
-    --primary-color: #4D9FEC; /* Light Blue */
-    --secondary-color: #F0F0F0; /* Light Gray */
-    --background-color: #FFFFFF; /* White */
-    --text-color: #333333; /* Dark Gray */
-    --success-color: #77D353; /* Light Green */
-    --warning-color: #FFD700; /* Light Yellow */
-    --danger-color: #FF6F61; /* Light Red */
-    --info-color: #50C7C7; /* Light Teal */
+    --primary-color: #fb7c7b; 
+    --secondary-color: #F0F0F0; 
+    --background-color: #edfafb;
+    --text-color: #333333; 
+    --success-color: #77D353;
+    --warning-color: #FFD700;
+    --danger-color: #FF6F61;
+    --info-color: #50C7C7; 
   }
   
   body {
