@@ -1,3 +1,4 @@
+import React from "react";
 import { useTheme } from "@mui/material";
 import { ResponsiveBar } from "@nivo/bar";
 import { tokens } from "../../theme";
@@ -6,37 +7,29 @@ import { mockBarData as data } from "../../view/data/mockData";
 const BarChart = ({ isDashboard = false }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
+  if (!data || data.length === 0) {
+    return <div>No data available</div>;
+  }
+
   const keys = Object.keys(data[0]).filter((key) => key !== "months");
+
   return (
     <ResponsiveBar
       data={data}
       theme={{
-        // added
         axis: {
           domain: {
-            line: {
-              stroke: colors.grey[100],
-            },
+            line: { stroke: colors.grey[100] },
           },
-          legend: {
-            text: {
-              fill: colors.grey[100],
-            },
-          },
+          legend: { text: { fill: colors.grey[100] } },
           ticks: {
-            line: {
-              stroke: colors.grey[100],
-              strokeWidth: 1,
-            },
-            text: {
-              fill: colors.grey[100],
-            },
+            line: { stroke: colors.grey[100], strokeWidth: 1 },
+            text: { fill: colors.grey[100] },
           },
         },
         legends: {
-          text: {
-            fill: colors.grey[100],
-          },
+          text: { fill: colors.grey[100] },
         },
       }}
       keys={keys}
@@ -66,17 +59,14 @@ const BarChart = ({ isDashboard = false }) => {
           spacing: 10,
         },
       ]}
-      borderColor={{
-        from: "color",
-        modifiers: [["darker", "1.6"]],
-      }}
+      borderColor={{ from: "color", modifiers: [["darker", "1.6"]] }}
       axisTop={null}
       axisRight={null}
       axisBottom={{
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "Months", // changed
+        legend: isDashboard ? undefined : "Months",
         legendPosition: "middle",
         legendOffset: 32,
       }}
@@ -84,17 +74,14 @@ const BarChart = ({ isDashboard = false }) => {
         tickSize: 5,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "Services", // changed
+        legend: isDashboard ? undefined : "Services",
         legendPosition: "middle",
         legendOffset: -40,
       }}
       enableLabel={false}
       labelSkipWidth={12}
       labelSkipHeight={12}
-      labelTextColor={{
-        from: "color",
-        modifiers: [["darker", 1.6]],
-      }}
+      labelTextColor={{ from: "color", modifiers: [["darker", 1.6]] }}
       legends={[
         {
           dataFrom: "keys",
@@ -109,20 +96,13 @@ const BarChart = ({ isDashboard = false }) => {
           itemDirection: "left-to-right",
           itemOpacity: 0.85,
           symbolSize: 20,
-          effects: [
-            {
-              on: "hover",
-              style: {
-                itemOpacity: 1,
-              },
-            },
-          ],
+          effects: [{ on: "hover", style: { itemOpacity: 1 } }],
         },
       ]}
       role="application"
-      barAriaLabel={function (e) {
-        return e.id + ": " + e.formattedValue + " in services: " + e.indexValue;
-      }}
+      barAriaLabel={(e) =>
+        `${e.id}: ${e.formattedValue} in services: ${e.indexValue}`
+      }
     />
   );
 };

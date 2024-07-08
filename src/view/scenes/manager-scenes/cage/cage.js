@@ -130,48 +130,65 @@ const Cage = () => {
       console.error(`Error getting cage data for key ${cageKey}:`, error);
     });
   };
+  const handleRelease = (cageKey) => {
+    const db = getDatabase();
+    const cageRef = ref(db, `cages/${cageKey}`);
+    
+    get(cageRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const cageData = snapshot.val();
+        const pets = cageData.pets || [];
+
+        // Find the pet that is currently in the cage
+        const petIndex = pets.findIndex((pet) => pet.inCage);
+        if (petIndex !== -1) {
+          pets[petIndex].inCage = false; // Set inCage to false
+
+          update(cageRef, { pets, status: "Available" })
+            .then(() => {
+              console.log(`Cage ${cageKey} released successfully.`);
+            })
+            .catch((error) => {
+              console.error(`Error releasing cage ${cageKey}:`, error);
+            });
+        } else {
+          console.error('No pet currently in the cage.');
+        }
+      }
+    }).catch((error) => {
+      console.error(`Error getting cage data for key ${cageKey}:`, error);
+    });
+  };
   
 
   const columns = [
     {
       field: "id",
       headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
-          Cage ID
-        </Typography>
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Cage ID</Typography>
       ),
       width: 150,
       editable: false,
-      renderCell: ({ value }) => (
-        <div style={{ fontSize: "16px" }}>{value}</div>
-      ),
+      renderCell: ({ value }) => <div style={{ fontSize: "16px" }}>{value}</div>,
     },
     {
       field: "name",
       headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
-          Cage name
-        </Typography>
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Cage name</Typography>
       ),
       flex: 0.5,
       editable: false,
       width: 150,
-      renderCell: ({ value }) => (
-        <div style={{ fontSize: "16px" }}>{value}</div>
-      ),
+      renderCell: ({ value }) => <div style={{ fontSize: "16px" }}>{value}</div>,
     },
     {
       field: "status",
       headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
-          Status
-        </Typography>
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Status</Typography>
       ),
       flex: 0.5,
       editable: false,
-      renderCell: ({ value }) => (
-        <div style={{ fontSize: "16px" }}>{value}</div>
-      ),
+      renderCell: ({ value }) => <div style={{ fontSize: "16px" }}>{value}</div>,
     },
     {
       field: "veterinarian",
@@ -180,18 +197,17 @@ const Cage = () => {
       ),
       flex: 0.7,
       editable: true,
-      renderCell: ({ value }) => (
-        <div style={{ fontSize: "16px" }}>
-          {value ? value.fullname : "No Vet Assigned"}
-        </div>
-      ),
+      renderCell: ({ row }) => {
+        const vet = row.pets && row.pets.find(pet => pet.inCage)?.veterinarian;
+        return (
+          <div style={{ fontSize: "16px" }}>
+            {vet ? vet.fullname : "No Vet Assigned"}
+          </div>
+        );
+      },
       renderEditCell: (params) => (
         <Typography sx={{ ml: "5px", fontSize: "20px" }}>
-          <RoleEditCell
-            {...params}
-            vets={vets}
-            handleVetChange={handleVetChange}
-          />
+          <RoleEditCell {...params} vets={vets} handleVetChange={handleVetChange} />
         </Typography>
       ),
     },
@@ -200,10 +216,10 @@ const Cage = () => {
       headerName: (
         <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Pet</Typography>
       ),
-      flex: 1.3,
+      flex: 0.7,
       editable: false,
       renderCell: ({ value }) =>
-        (value || []).map((pet) => (
+        (value || []).filter(pet => pet.inCage).map((pet) => (
           <div key={pet.petId} style={{ fontSize: "16px" }}>
             {pet.petId}
           </div>
@@ -212,11 +228,9 @@ const Cage = () => {
     {
       field: "update",
       headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
-          Update
-        </Typography>
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Update</Typography>
       ),
-      flex: 0.5,
+      flex: 0.6,
       renderCell: (params) => (
         <div className="admin-update-button">
           <Button
@@ -224,17 +238,31 @@ const Cage = () => {
             size="small"
             onClick={() => handleUpdate(params.row.key, params.row.id, params.row.petId)}
             style={{
-              marginRight: "10px",
+              marginRight: "16px",
               fontSize: "16px",
               backgroundColor: "green",
             }}
           >
             Update
           </Button>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => handleRelease(params.row.key, params.row.id, params.row.petId)}
+            style={{
+              marginLeft: "16px",
+              fontSize: "16px",
+              backgroundColor: "green",
+            }}
+          >
+            Release
+          </Button>
         </div>
       ),
     },
   ];
+
+  
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
   };

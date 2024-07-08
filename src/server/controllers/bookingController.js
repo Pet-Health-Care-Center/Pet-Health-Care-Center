@@ -121,3 +121,22 @@ exports.getServices = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+exports.fetchAllBookingsUser = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  try {
+    const db = getDatabase();
+    const bookingRef = ref(db, `users/${userId}/bookings`);
+    const snapshot = await get(bookingRef);
+    const data = snapshot.val();
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching data: ", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

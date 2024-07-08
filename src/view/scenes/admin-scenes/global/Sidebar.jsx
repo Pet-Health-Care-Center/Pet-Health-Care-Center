@@ -12,6 +12,7 @@ import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PetsIcon from "@mui/icons-material/Pets";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../../../Components/firebase/firebase";
@@ -220,6 +221,14 @@ const Sidebar = () => {
               title="Services Data"
               to="/admin/addService"
               icon={<MedicalServicesIcon sx={{ fontSize: "22px" }} />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+
+            <Item
+              title="Refund Data"
+              to="/admin/refundData"
+              icon={<AttachMoneyIcon sx={{ fontSize: "22px" }} />}
               selected={selected}
               setSelected={setSelected}
             />

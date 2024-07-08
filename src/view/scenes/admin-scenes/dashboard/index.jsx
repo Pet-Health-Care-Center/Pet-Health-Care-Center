@@ -176,7 +176,7 @@ const Dashboard = () => {
 
     updateRevenue();
 
-    const intervalId = setInterval(updateRevenue, 15000);
+    const intervalId = setInterval(updateRevenue, 1000);
 
     return () => clearInterval(intervalId);
   }, [isCustomDateSelected, selectedDate]);

@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://mypetcare.onrender.com";
 
 export const getServices = async () => {
   const response = await fetch(`${BASE_URL}/services_cages/getServices`);

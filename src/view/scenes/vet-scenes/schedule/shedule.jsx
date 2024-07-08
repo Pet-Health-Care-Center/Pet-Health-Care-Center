@@ -12,7 +12,6 @@ import {
   ListItemText,
   useTheme,
 } from "@mui/material";
-import { getDatabase, ref, onValue, get } from "firebase/database";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import Header from "../../../../Components/dashboardChart/Header";
@@ -20,7 +19,7 @@ import { ToastContainer, toast } from "react-toastify";
 import Clock from "react-live-clock";
 import { tokens } from "../../../../theme";
 import { fetchUserById } from "../../../account/getUserData";
-import { fetchAllBookings } from "../../../booking/fetchAllBookingData";
+import { fetchAllBookingsUser } from "../../../booking/fetchBooking";
 
 const Schedule = () => {
   const theme = useTheme();
@@ -105,7 +104,7 @@ const Schedule = () => {
     }
 
     if (userId) {
-      const bookingsData = await fetchAllBookings(userId);
+      const bookingsData = await fetchAllBookingsUser(userId);
       if (bookingsData) {
         const bookingKey = Object.keys(bookingsData).find(
           (key) => bookingsData[key].bookingId === bookingId

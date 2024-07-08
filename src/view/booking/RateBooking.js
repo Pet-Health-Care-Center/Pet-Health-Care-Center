@@ -66,9 +66,11 @@ const RatingBooking = () => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const userData = await fetchUserById(userId1);
+        const userData = await fetchUserById(user.uid);
         setUsername(userData.username);
         setAvatar(userData.avatar)
+        console.log(username)
+        console.log(avatar)
       } catch (error) {
         setError(error.message);
       } finally {
@@ -76,10 +78,10 @@ const RatingBooking = () => {
       }
     };
 
-    if (userId1) {
+    if (user.uid) {
       getUser();
     }
-  }, [userId1]);
+  }, [user.uid]);
 
 
   

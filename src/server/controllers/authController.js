@@ -24,6 +24,8 @@ const googleLogin = async (req, res) => {
     let userData = userDataSnapshot.exists() ? userDataSnapshot.val() : null;
     let userRole = "user";
     userRole = userData.role || "user";
+    const  avatar = 'https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png'
+    
 
     if (!userData) {
       userData = {
@@ -34,7 +36,7 @@ const googleLogin = async (req, res) => {
         accountBalance: 0,
         accountStatus: 'enable',
         creationTime: creationTime,
-        avatar: userData.avatar,
+        avatar: userData.avatar || avatar,
       };
       await set(userRef, userData);
     } else {
@@ -47,7 +49,7 @@ const googleLogin = async (req, res) => {
         accountBalance: 0,
         accountStatus: 'enable',
         creationTime: creationTime,
-        avatar: userData.avatar,
+        avatar: userData.avatar || avatar,
       };
       await update(userRef, userData);
 

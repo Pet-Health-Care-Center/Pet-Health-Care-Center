@@ -1,5 +1,5 @@
 
-const BASE_URL = 'https://mypetcare.onrender.com';
+const BASE_URL = 'http://localhost:5000';
 
 
 export const fetchBookings = async (userId) => {
@@ -28,6 +28,18 @@ export const cancelBooking = async (bookingData) => {
 export const fetchBookingDetails = async (userId, bookingId) => {
   try {
     const response = await fetch(`${BASE_URL}/bookings/${userId}/${bookingId}`);
+    if (!response.ok) {
+      throw new Error(`Error fetching booking details: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+};
+export const fetchAllBookingsUser = async (userId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/bookings/fetchAll/${userId}/`);
     if (!response.ok) {
       throw new Error(`Error fetching booking details: ${response.statusText}`);
     }

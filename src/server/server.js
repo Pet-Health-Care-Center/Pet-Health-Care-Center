@@ -7,36 +7,45 @@ const userRoutes = require("./router/userRoutes");
 const bookingRoutes = require("./router/bookingRoutes");
 const cancelBookingRoutes = require("./router/cancelBookingRoutes");
 require("dotenv").config();
-const petRoutes = require('./router/petRoutes');
-const authRoutes = require("./router/authRoutes")
-const servicesRoutes = require("./router/allBookingDataRoutes")
-const addBookingRoutes = require("./router/addBookingRoutes")
-const transactionRoutes = require("./router/transactionRoutes")
-const service_cageRoutes = require("./router/service-cageRoutes")
+const petRoutes = require("./router/petRoutes");
+const authRoutes = require("./router/authRoutes");
+const servicesRoutes = require("./router/allBookingDataRoutes");
+const addBookingRoutes = require("./router/addBookingRoutes");
+const transactionRoutes = require("./router/transactionRoutes");
+const service_cageRoutes = require("./router/service-cageRoutes");
 
-app.use(cors({
-  origin: ['http://localhost:3000', 'https://mypetcare-center.vercel.app'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'], 
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://mypetcare-center.vercel.app"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Middleware to parse JSON requests
 app.use(express.json());
-
+app.use((req, res, next) => {
+  console.log(`${req.method} request for '${req.url}'`);
+  next();
+});
 // Use routes
 app.use("/userData", userRoutes);
-app.use('/bookings', bookingRoutes);
-app.use('/cancel-booking', cancelBookingRoutes);
-app.use('/pets', petRoutes);
+app.use("/bookings", bookingRoutes);
+app.use("/cancel-booking", cancelBookingRoutes);
+app.use("/pets", petRoutes);
 app.use("/auth", authRoutes);
 app.use("/allBookingData", servicesRoutes);
 app.use("/addBookingData", addBookingRoutes);
 app.use("/transaction", transactionRoutes);
 app.use("/services_cages", service_cageRoutes);
 
-
-
-function sendEmail({ user_email, user_name, amount, refund_date, request_date }) {
+function sendEmail({
+  user_email,
+  user_name,
+  amount,
+  refund_date,
+  request_date,
+}) {
   return new Promise((resolve, reject) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -163,7 +172,7 @@ function sendEmail({ user_email, user_name, amount, refund_date, request_date })
             <p>We are happy to notify you that your request for a refund has been processed successfully.</p>
             <p><strong>Refund Amount:</strong> ${amount}</p>
             <p><strong>Request Day:</strong> ${request_date}</p>
-            <p><strong>Refund Day:</strong> ${ refund_date}</p>
+            <p><strong>Refund Day:</strong> ${refund_date}</p>
             <p>Thank you for using our services.</p>
             <p>Best wishes,<br>Pet Health Care team</p>
           </div>
@@ -178,10 +187,8 @@ function sendEmail({ user_email, user_name, amount, refund_date, request_date })
           </div>
         </div>
       </body>
-    </html>`
-    }
-    
-
+    </html>`,
+    };
 
     transporter.sendMail(mail_configs, function (error, info) {
       if (error) {
@@ -205,7 +212,6 @@ app.post("/send-email", (req, res) => {
     .then((response) => res.send(response.message))
     .catch((error) => res.status(500).send(error.message));
 });
-
 
 app.listen(port, () => {
   console.log(`nodemailerProject is listening at http://localhost:${port}`);

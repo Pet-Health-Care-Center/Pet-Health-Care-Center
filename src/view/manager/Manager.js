@@ -46,10 +46,10 @@ function ManagerDashboard() {
           if (data.role === "user") {
             toast.error("You can't access this site!");
             navigate("/");
-          } else if (data.role === "admin") {
-            toast.error("You can't access this site!");
-            navigate("/admin/dashboard");
-          } else if (data.role === "veterinary") {
+          // } else if (data.role === "admin") {
+          //   toast.error("You can't access this site!");
+          //   navigate("/admin/dashboard");
+          // } else if (data.role === "veterinary") {
             toast.error("You can't access this site!");
             navigate("/veterinary");
           } else {

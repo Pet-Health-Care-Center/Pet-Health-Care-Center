@@ -16,6 +16,10 @@ import {
 import { toast } from "react-toastify";
 import { getAuth } from "firebase/auth";
 import moment from "moment-timezone";
+import { fetchBookings } from "../../../booking/fetchBooking";
+import { fetchUserById } from "../../../account/getUserData";
+import { fetchPetDetails } from "../../../pet/fetchPet";
+import LoadingAnimation from "../../../../animation/loading-animation";
 
 const MedicalRecord = () => {
   const { userId, bookingId } = useParams();
@@ -25,6 +29,7 @@ const MedicalRecord = () => {
   const [prescription, setPrescription] = useState("");
   const [notes, setNotes] = useState("");
   const [cageRequired, setCageRequired] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [availableCages, setAvailableCages] = useState([]);
   const [selectedCage, setSelectedCage] = useState(null);
   const [medicalHistory, setMedicalHistory] = useState([]);
@@ -33,6 +38,7 @@ const MedicalRecord = () => {
   const [user, setUser] = useState("");
   const navigate = useNavigate();
   const [width, setWidth] = useState(0);
+  const [showMedicalHistory, setShowMedicalHistory] = useState(false);
   const elementRef = useRef(null);
 
   useLayoutEffect(() => {
@@ -53,16 +59,15 @@ const MedicalRecord = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const db = getDatabase();
-        const userRef = ref(db, `users/${userId}`);
-        const snapshot = await get(userRef);
-        const userData = snapshot.val();
+        const userData = await fetchUserById(userId);
         setUser(userData);
       } catch (error) {
-        console.error("Error fetching vet schedule:", error);
+        console.error("Error fetching user data:", error);
       }
     };
-    fetchUserData();
+    if (userId) {
+      fetchUserData();
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -70,13 +75,10 @@ const MedicalRecord = () => {
       try {
         const currentUser = auth.currentUser;
         if (currentUser) {
-          const db = getDatabase();
-          const vetScheduleRef = ref(db, `users/${currentUser.uid}/schedule`);
-          const snapshot = await get(vetScheduleRef);
-          const vetScheduleData = snapshot.val();
-          if (vetScheduleData) {
-            setVetSchedule(vetScheduleData);
-            console.log("Fetched vet schedule:", vetScheduleData); // Debugging
+          const userData = await fetchUserById(currentUser.uid);
+          if (userData.schedule) {
+            setVetSchedule(userData.schedule);
+            console.log("Fetched vet schedule:", userData.schedule); // Debugging
           } else {
             console.error("No vet schedule data found");
           }
@@ -86,7 +88,6 @@ const MedicalRecord = () => {
         toast.error("Error fetching vet schedule. Please try again.");
       }
     };
-
     fetchVetSchedule();
   }, [auth]);
 
@@ -173,6 +174,7 @@ const MedicalRecord = () => {
           date: moment().tz("Asia/Ho_Chi_Minh").format("DD/MM/YYYY"),
           petId: booking.pet.key,
           inCage: true,
+          bookingId: booking.bookingId,
         };
 
         await saveMedicalRecord(userId, bookingId, {
@@ -202,8 +204,10 @@ const MedicalRecord = () => {
           prescription,
           notes,
           cageRequired,
+          bookingId: booking.bookingId,
         });
         toast.success("Medical record saved successfully!");
+        navigate(-1);
       } catch (error) {
         console.error("Error saving medical record:", error);
         toast.error("Error saving medical record. Please try again.");
@@ -237,7 +241,7 @@ const MedicalRecord = () => {
           ...record,
         },
       };
-      await update(bookingRef, updatedBookingData);
+      // await update(bookingRef, updatedBookingData);
 
       // Cập nhật dữ liệu lịch trình của bác sĩ thú y
       const vetScheduleRef = ref(
@@ -252,7 +256,7 @@ const MedicalRecord = () => {
           if (item.bookingId === booking.bookingId) {
             return {
               ...item,
-              isChecked: true,
+              isChecked: false,
             };
           }
           return item;
@@ -276,7 +280,7 @@ const MedicalRecord = () => {
         bookingId: booking.bookingId,
         ...record,
       });
-      await update(petRef, { medicalHistory: updatedMedicalHistory });
+      // await update(petRef, { medicalHistory: updatedMedicalHistory });
 
       console.log("Updated pet medical history:", updatedMedicalHistory);
 
@@ -287,7 +291,7 @@ const MedicalRecord = () => {
     }
   };
 
-  if (!booking) return <div>Loading...</div>;
+  if (!booking) return <LoadingAnimation />;
 
   const styles = {
     container: {
@@ -352,8 +356,13 @@ const MedicalRecord = () => {
     },
   };
 
+  const toggleMedicalHistory = () => {
+    setShowMedicalHistory(!showMedicalHistory);
+  };
+
   return (
     <Box sx={styles.container}>
+      {loading && <LoadingAnimation />}
       <div ref={elementRef}>Width of this element is: {width}px</div>
       <Typography variant="h2" gutterBottom sx={styles.header}>
         Medical Record
@@ -443,192 +452,199 @@ const MedicalRecord = () => {
         </Grid>
       </Grid>
 
-      <Typography variant="h4">Medical History</Typography>
-      <Box mt={2} height={180} overflow={"auto"} border={"solid 1px black"}>
-        <Grid container spacing={3} padding={2}>
-          <Grid item xs={6}>
-            <Box>
-              {medicalHistory
-                .slice(0, Math.ceil(medicalHistory.length / 2))
-                .map((record, index) => (
-                  <Box key={index} mb={2} borderBottom={"solid"}>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Date:</strong>
-                        </Typography>
+      <Typography
+        variant="h4"
+        onClick={toggleMedicalHistory}
+        style={{ cursor: "pointer" }}
+      >
+        Medical History
+      </Typography>
+      {showMedicalHistory && (
+        <Box mt={2} height={180} overflow={"auto"} border={"solid 1px black"}>
+          <Grid container spacing={3} padding={2}>
+            <Grid item xs={6}>
+              <Box>
+                {medicalHistory
+                  .slice(0, Math.ceil(medicalHistory.length / 2))
+                  .map((record, index) => (
+                    <Box key={index} mb={2} borderBottom={"solid"}>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Date:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.date || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.date || "N/A"}
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Diagnostic:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.diagnostic || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Diagnostic:</strong>
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Prescription:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.prescription || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.diagnostic || "N/A"}
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Symptoms:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.symptoms || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Prescription:</strong>
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Notes:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.notes || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.prescription || "N/A"}
-                        </Typography>
+                    </Box>
+                  ))}
+              </Box>
+            </Grid>
+            <Grid item xs={6}>
+              <Box>
+                {medicalHistory
+                  .slice(Math.ceil(medicalHistory.length / 2))
+                  .map((record, index) => (
+                    <Box key={index} mb={2} borderBottom={"solid"}>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Date:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.date || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Symptoms:</strong>
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Diagnostic:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.diagnostic || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.symptoms || "N/A"}
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Prescription:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.prescription || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Notes:</strong>
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Symptoms:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.symptoms || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.notes || "N/A"}
-                        </Typography>
+                      <Grid container>
+                        <Grid item xs={4} style={{ textAlign: "left" }}>
+                          <Typography variant="body1" fontSize={"20px"}>
+                            <strong>Notes:</strong>
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={8} style={{ textAlign: "left" }}>
+                          <Typography
+                            variant="body1"
+                            fontSize={"20px"}
+                            color="black"
+                          >
+                            {record.notes || "N/A"}
+                          </Typography>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </Box>
-                ))}
-            </Box>
+                    </Box>
+                  ))}
+              </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={6}>
-            <Box>
-              {medicalHistory
-                .slice(Math.ceil(medicalHistory.length / 2))
-                .map((record, index) => (
-                  <Box key={index} mb={2} borderBottom={"solid"}>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Date:</strong>
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.date || "N/A"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Diagnostic:</strong>
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.diagnostic || "N/A"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Prescription:</strong>
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.prescription || "N/A"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Symptoms:</strong>
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.symptoms || "N/A"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid container>
-                      <Grid item xs={4} style={{ textAlign: "left" }}>
-                        <Typography variant="body1" fontSize={"20px"}>
-                          <strong>Notes:</strong>
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={8} style={{ textAlign: "left" }}>
-                        <Typography
-                          variant="body1"
-                          fontSize={"20px"}
-                          color="black"
-                        >
-                          {record.notes || "N/A"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                ))}
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
-
+        </Box>
+      )}
       <Grid container spacing={3} mt={3}>
         <Grid item xs={6}>
           <TextField

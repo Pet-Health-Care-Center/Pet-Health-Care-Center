@@ -1,6 +1,6 @@
 
 
-const BASE_URL = 'http://localhost:5000/userData';
+const BASE_URL = 'https://mypetcare.onrender.com/userData';
 
 export const fetchUserById = async (userId) => {
   const response = await fetch(`${BASE_URL}/${userId}`);

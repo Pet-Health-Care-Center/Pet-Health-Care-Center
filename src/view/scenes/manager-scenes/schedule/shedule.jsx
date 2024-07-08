@@ -14,57 +14,65 @@ const ManagerSchedule = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const auth = getAuth();
   const dragContainerRef = useRef(null);
+  const [vetsFetched, setVetsFetched] = useState(false);
+  const [eventsFetched, setEventsFetched] = useState(false);
 
   useEffect(() => {
-    const fetchVets = async () => {
-      const db = getDatabase();
-      const vetsRef = ref(db, "users");
-      const snapshot = await get(vetsRef);
-      const vetsData = snapshot.val();
-      const vetsList = Object.keys(vetsData)
-        .filter((uid) => vetsData[uid].role === "veterinarian")
-        .map((uid) => ({
-          uid,
-          name: vetsData[uid].fullname,
-          schedule: vetsData[uid].schedule || {},
-          specialization: vetsData[uid].specialization,
-        }));
-      setVets(vetsList);
-    };
+    if (!vetsFetched) {
+      const fetchVets = async () => {
+        const db = getDatabase();
+        const vetsRef = ref(db, "users");
+        const snapshot = await get(vetsRef);
+        const vetsData = snapshot.val();
+        const vetsList = Object.keys(vetsData)
+          .filter((uid) => vetsData[uid].role === "veterinarian")
+          .map((uid) => ({
+            uid,
+            name: vetsData[uid].fullname,
+            schedule: vetsData[uid].schedule || {},
+            specialization: vetsData[uid].specialization,
+          }));
+        setVets(vetsList);
+        setVetsFetched(true); // Set the flag to true after fetching
+      };
 
-    fetchVets();
-  }, []);
+      fetchVets();
+    }
+  }, [vetsFetched]);
 
   useEffect(() => {
-    const fetchEvents = () => {
-      const eventsList = [];
-      vets.forEach((vet) => {
-        Object.keys(vet.schedule).forEach((date) => {
-          if (vet.schedule[date] === true) {
-            eventsList.push({
-              id: `${vet.uid}-${date}`,
-              title: `Work Day - ${vet.name}`,
-              start: date,
-              allDay: true,
-              backgroundColor: "lightgrey",
-              borderColor: "lightgrey",
-              textColor: "black",
-              extendedProps: {
-                vetId: vet.uid,
-                vetName: vet.name,
-              },
-            });
-          }
+    if (!eventsFetched && vetsFetched) {
+      const fetchEvents = () => {
+        const eventsList = [];
+        vets.forEach((vet) => {
+          Object.keys(vet.schedule).forEach((date) => {
+            if (vet.schedule[date] === true) {
+              eventsList.push({
+                id: `${vet.uid}-${date}`,
+                title: `Work Day - ${vet.name}`,
+                start: date,
+                allDay: true,
+                backgroundColor: "lightgrey",
+                borderColor: "lightgrey",
+                textColor: "black",
+                extendedProps: {
+                  vetId: vet.uid,
+                  vetName: vet.name,
+                },
+              });
+            }
+          });
         });
-      });
-      setEvents(eventsList);
-    };
+        setEvents(eventsList);
+        setEventsFetched(true); // Set the flag to true after fetching
+      };
 
-    fetchEvents();
-  }, [vets]);
+      fetchEvents();
+    }
+  }, [vets, vetsFetched, eventsFetched]);
 
   useEffect(() => {
-    if (dragContainerRef.current) {
+    if (dragContainerRef.current && vetsFetched) {
       new Draggable(dragContainerRef.current, {
         itemSelector: ".draggable-item",
         eventData: function (eventEl) {
@@ -84,7 +92,7 @@ const ManagerSchedule = () => {
         },
       });
     }
-  }, [vets]);
+  }, [vetsFetched]);
 
   const handleEventReceive = useCallback(
     async (info) => {
@@ -119,7 +127,6 @@ const ManagerSchedule = () => {
         const updates = {};
         updates[`users/${extendedProps.vetId}/schedule/${event.startStr}`] = true;
         await update(ref(db), updates);
-
         toast.success("Set schedule for vet successfully!");
       } else {
         toast.error("Vet already has a schedule on this day!");
@@ -168,6 +175,7 @@ const ManagerSchedule = () => {
       autoClose: 2000,
     });
   };
+
 
   return (
     <>

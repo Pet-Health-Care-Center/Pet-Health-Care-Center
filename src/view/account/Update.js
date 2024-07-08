@@ -23,6 +23,7 @@ import {
 import RefundModal from './RefundModal';
 import { fetchUserById, updateUserById, uploadAvatar } from "./getUserData";
 import moment from "moment";
+import LoadingAnimation from "../../animation/loading-animation";
 
 function Update() {
   const { userId1 } = useParams();
@@ -46,6 +47,7 @@ function Update() {
   const [join, setJoin] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState(null);
+  const [isCustomAvatar, setIsCustomAvatar] = useState(false);
 
 
   const timestamp = parseInt(user?.metadata?.lastLoginAt, 10);
@@ -65,6 +67,7 @@ function Update() {
   useEffect(() => {
     const getUser = async () => {
       try {
+        setLoading(true);
         const userData = await fetchUserById(userId1);
         setEmail(userData.email);
         setUsername(userData.username);
@@ -76,12 +79,14 @@ function Update() {
         setGender(userData.gender || "Male");
         if (userData.avatar) {
           setAvatar(userData.avatar);
+          setIsCustomAvatar(true);
         } else {
           setAvatar(
             userData.gender === "Female"
               ? "https://static.vecteezy.com/system/resources/previews/004/899/833/non_2x/beautiful-girl-with-blue-hair-avatar-of-woman-for-social-network-vector.jpg"
               : "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png"
           );
+          setIsCustomAvatar(false);
         }
         setJoin(userData.creationTime);
       } catch (error) {
@@ -100,11 +105,13 @@ function Update() {
   const handleGenderChange = (e) => {
     const newGender = e.target.value;
     setGender(newGender);
-    setAvatar(
-      newGender === "Female"
-        ? "https://static.vecteezy.com/system/resources/previews/004/899/833/non_2x/beautiful-girl-with-blue-hair-avatar-of-woman-for-social-network-vector.jpg"
-        : "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png"
-    );
+    if (!isCustomAvatar) { 
+      setAvatar(
+        newGender === "Female"
+          ? "https://static.vecteezy.com/system/resources/previews/004/899/833/non_2x/beautiful-girl-with-blue-hair-avatar-of-woman-for-social-network-vector.jpg"
+          : "https://icons.veryicon.com/png/o/miscellaneous/user-avatar/user-avatar-male-5.png"
+      );
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -139,6 +146,7 @@ function Update() {
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
+      setLoading(true);
       try {
         const result = await uploadAvatar(userId1, file);
         const downloadURL = result.avatar;
@@ -148,6 +156,8 @@ function Update() {
       } catch (error) {
         console.error("Error uploading avatar:", error);
         toast.error("Failed to upload avatar. Please try again.");
+      } finally {
+        setLoading(false); 
       }
     }
   };
@@ -164,6 +174,7 @@ function Update() {
       overflowY: "auto",
     }}
     >
+              {loading && <LoadingAnimation />}
       <div className="pet-profile-wrapper user-profile-wrapper">
         <div className="left-panel">
           <div className="avatar-container" style={{ position: "relative" }}>

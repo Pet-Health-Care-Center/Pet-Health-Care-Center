@@ -6,6 +6,7 @@ import { faCaretLeft, faCaretRight } from '@fortawesome/free-solid-svg-icons';
 import { getDatabase, ref, onValue } from "firebase/database";
 import Spinner from 'react-bootstrap/Spinner'; // Ensure you have react-bootstrap installed
 import {fetchServices} from "./fetchAllBookingData"
+import LoadingAnimation from '../../animation/loading-animation';
 
 const SelectService = () => {
   const { selectedPet, setSelectedServices } = useContext(BookingContext);
@@ -23,6 +24,7 @@ const SelectService = () => {
 
   useEffect(() => {
     const fetchServiceData = async () => {
+      setLoading(true)
       try {
         const data = await fetchServices();
         setServices(data.services);
@@ -56,22 +58,16 @@ const SelectService = () => {
   if (!selectedPet) {
     return (
       <div className="service-selection">
+
         <h1>No pet selected. Please go back and select a pet.</h1>
         <button onClick={() => navigate('/book/select-pet')}>Go Back</button>
       </div>
     );
   }
-
+  
   return (
     <div className="service-selection">
-      {loading ? (
-        <div className="loading-spinner">
-          <Spinner animation="border" role="status">
-            <span className="sr-only">Loading...</span>
-          </Spinner>
-        </div>
-      ) : (
-        <>
+      {loading && <LoadingAnimation />}
           <h1>Select Services for <span className='service-pet-name'>{selectedPet.name}</span></h1>
           <div className="service-list">
             {services.map((service) => (
@@ -109,8 +105,6 @@ const SelectService = () => {
             NEXT 
             <FontAwesomeIcon className='icon-right' icon={faCaretRight} />
           </button>
-        </>
-      )}
     </div>
   );
 };

@@ -42,6 +42,7 @@ const ManageBooking = () => {
 
     if (usersData) {
       Object.keys(usersData).forEach((userId) => {
+        console.log(userId);
         const userData = usersData[userId];
         if (userData.username && userData.bookings) {
           Object.keys(userData.bookings).forEach((bookingId) => {
@@ -73,7 +74,6 @@ const ManageBooking = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       const allBookings = await fetchAllBookings();
-      console.log("Fetched Bookings:", allBookings);
       setBookings(allBookings);
       setLoading(false);
     };
@@ -91,9 +91,6 @@ const ManageBooking = () => {
       ? dayjs(booking.date).format("DD-MM-YYYY") ===
         dayjs(selectedDate).format("DD-MM-YYYY")
       : true;
-    console.log(matchesSelectedDate);
-    console.log(selectedDate);
-    console.log(booking.date);
     return matchesSearchQuery && matchesSelectedDate;
   });
 
