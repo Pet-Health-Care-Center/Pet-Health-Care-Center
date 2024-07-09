@@ -17,6 +17,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import useForceUpdate from "../../hooks/useForceUpdate";
+import { getDatabase, get, ref, onValue } from "firebase/database";
 import Box from "@mui/material/Box";
 import Rating from "@mui/material/Rating";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -26,7 +27,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import useViewport from "../../hooks/useViewport";
-import { getAllUsers } from "../account/getUserData";
 
 function Home() {
   const typedElement = useRef(null);
@@ -106,6 +106,22 @@ function Home() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user && user.uid) {
+      const db = getDatabase();
+      const userRef = ref(db, "users/" + user.uid);
+
+      onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+
+        console.log(data)
+        if (data) {
+          setAvatar(data.avatar)
+        }
+      });
+    } 
+  }, [user]);
 
   const book = () => {
     if (user) {
@@ -203,34 +219,43 @@ function Home() {
     navigate("/#home");
   };
   useEffect(() => {
+    // Kiểm tra xem có user hay không trước khi gọi fetchAllBookings
+    if (!user) {
+      console.log('No user is logged in');
+      return; // Nếu không có user, thoát khỏi useEffect
+    }
+
     const fetchAllBookings = async () => {
-      try {
-        const usersData = await getAllUsers();
-        let allBookings = [];
-          Object.keys(usersData).forEach((userId) => {
-            const userData = usersData[userId];
-            if (userData.bookings) {
-              Object.keys(userData.bookings).forEach((bookingId) => {
-                const booking = userData.bookings[bookingId];
-                allBookings.push({
-                  userId,
-                  bookingId,
-                  ...booking,
-                });
+      const db = getDatabase();
+      const usersRef = ref(db, 'users');
+      const snapshot = await get(usersRef);
+      const usersData = snapshot.val();
+      let allBookings = [];
+
+      if (usersData) {
+        Object.keys(usersData).forEach((userId) => {
+          const userData = usersData[userId];
+          if (userData.bookings) {
+            Object.keys(userData.bookings).forEach((bookingId) => {
+              const booking = userData.bookings[bookingId];
+              allBookings.push({
+                userId,
+                bookingId,
+                ...booking,
               });
-            }
-          });
-
-  
-        setBookedSlots(allBookings);
-      } catch (error) {
-        console.error("Failed to fetch all bookings:", error);
+            });
+          }
+        });
       }
+      setBookedSlots(allBookings);
     };
-  
-    fetchAllBookings();
-  }, [user]);
 
+    fetchAllBookings();
+  }, [user]); // Thêm user vào dependency array để useEffect chỉ chạy khi user thay đổi
+
+  useEffect(() => {
+    console.log(user);
+  }, [user]);
 
   useEffect(() => {
     const hasEnoughSlides = bookedSlots.length > slidesPerView;
@@ -351,8 +376,7 @@ function Home() {
           </div>
           <div className="about-text" data-aos="fade-left">
             <span className="text-about">
-            Awarded for excellence and innovation in pet medical examination and treatment
-            
+            Awarded for outstanding creative vision and innovation in game direction and design.
             </span>
             <p className="font_1">
               <span className="text1-about">
@@ -379,32 +403,32 @@ function Home() {
           <div className="testimonials-vet">
         <div className="testimonial-vet">
             <div className="quote">
-                <p>"I would like to sincerely thank the organizers for awarding me the "Best Pet Sitter" award. This is a great honor and motivation for me to continue dedicating myself to providing the best care for our beloved pets. Thank you to all my clients for their trust and support!"</p>
+                <p>"Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat ."</p>
             </div>
             <div className="profile">
-                <img src="https://img1.wsimg.com/isteam/ip/cb19dd35-86c8-43c8-b81a-0dbc3e39415a/balto.JPG/:/cr=t:6.72%25,l:17.54%25,w:64.94%25,h:64.94%25" alt="John Larson"/>
+                <img src="https://via.placeholder.com/80" alt="John Larson"/>
                 <div className="name">John Larson</div>
-                <div className="title">Best pet sitter</div>
+                <div className="title">Entrepreneur</div>
             </div>
         </div>
         <div className="testimonial-vet">
             <div className="quote">
-                <p>"I am deeply honored to receive the "Exquisite Pet Groomer Award." Thank you to the organizers for this recognition and to my wonderful clients and their pets for their trust and support. This award inspires me to continue my dedication to excellence in pet grooming. Thank you!"</p>
+                <p>"Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper."</p>
             </div>
             <div className="profile">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTECHP_N_70v9j85m3uYLYsoxJjxIsemqqcoA&s" alt="Saul Goodman"/>
+                <img src="https://via.placeholder.com/80" alt="Saul Goodman"/>
                 <div className="name">Saul Goodman</div>
-                <div className="title">The Exquisite Pet Groomer Award</div>
+                <div className="title">CEO & Founder</div>
             </div>
         </div>
         <div className="testimonial-vet">
             <div className="quote">
-                <p>"I am deeply honored to receive the "Most Praised by Customers" award. Thank you to the organizers for this recognition and to my wonderful clients for their trust and support. This award inspires me to continue providing excellent service. Thank you!"</p>
+                <p>"Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa."</p>
             </div>
             <div className="profile">
-                <img src="https://www.petmart.vn/wp-content/uploads/2015/04/tram-cuu-ho-cho-meo.jpg" alt="Sara Wilsson"/>
+                <img src="https://via.placeholder.com/80" alt="Sara Wilsson"/>
                 <div className="name">Sara Wilsson</div>
-                <div className="title">The award received the most praise from customers</div>
+                <div className="title">Designer</div>
             </div>
         </div>
     </div>

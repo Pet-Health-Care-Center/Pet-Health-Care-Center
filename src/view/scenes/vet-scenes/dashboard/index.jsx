@@ -2324,7 +2324,7 @@ const Dashboard = () => {
                             placeholder="Home Address"
                             value="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"
                             type="text"
-                            style={{marginLeft: "-60%"}}
+                            style={{marginLeft: "-50%"}}
                           />
                         </div>
                       </div>
