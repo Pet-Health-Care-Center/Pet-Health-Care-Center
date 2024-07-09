@@ -17,7 +17,6 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import useForceUpdate from "../../hooks/useForceUpdate";
-import { getDatabase, get, ref, onValue } from "firebase/database";
 import Box from "@mui/material/Box";
 import Rating from "@mui/material/Rating";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -27,6 +26,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import useViewport from "../../hooks/useViewport";
+import { getAllUsers } from "../account/getUserData";
 
 function Home() {
   const typedElement = useRef(null);
@@ -106,22 +106,6 @@ function Home() {
 
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (user && user.uid) {
-      const db = getDatabase();
-      const userRef = ref(db, "users/" + user.uid);
-
-      onValue(userRef, (snapshot) => {
-        const data = snapshot.val();
-
-        console.log(data)
-        if (data) {
-          setAvatar(data.avatar)
-        }
-      });
-    } 
-  }, [user]);
 
   const book = () => {
     if (user) {
@@ -220,35 +204,33 @@ function Home() {
   };
   useEffect(() => {
     const fetchAllBookings = async () => {
-      const db = getDatabase();
-      const usersRef = ref(db, "users");
-      const snapshot = await get(usersRef);
-      const usersData = snapshot.val();
-      let allBookings = [];
-      // console.log("Users Data:", usersData);
-
-      if (usersData) {
-        Object.keys(usersData).forEach((userId) => {
-          const userData = usersData[userId];
-          if (userData.bookings) {
-            Object.keys(userData.bookings).forEach((bookingId) => {
-              const booking = userData.bookings[bookingId];
-              allBookings.push({
-                userId,
-                bookingId,
-                ...booking,
+      try {
+        const usersData = await getAllUsers();
+        let allBookings = [];
+          Object.keys(usersData).forEach((userId) => {
+            const userData = usersData[userId];
+            if (userData.bookings) {
+              Object.keys(userData.bookings).forEach((bookingId) => {
+                const booking = userData.bookings[bookingId];
+                allBookings.push({
+                  userId,
+                  bookingId,
+                  ...booking,
+                });
               });
-            });
-          }
-        });
-      }
-      // console.log("All Bookings:", allBookings);
-      setBookedSlots(allBookings);
-    };
+            }
+          });
 
+  
+        setBookedSlots(allBookings);
+      } catch (error) {
+        console.error("Failed to fetch all bookings:", error);
+      }
+    };
+  
     fetchAllBookings();
-  }, []);
-  console.log(user)
+  }, [user]);
+
 
   useEffect(() => {
     const hasEnoughSlides = bookedSlots.length > slidesPerView;
@@ -352,7 +334,7 @@ function Home() {
       </div>
       <section className="about" id="about">
         <div className="font_0" data-aos="fade-in">
-          <h3>Veterinarians Of The Year</h3>
+          <h3>Hi, I'm Dr. Mark Edwards</h3>
         </div>
 
         <div className="about-container">
@@ -361,6 +343,8 @@ function Home() {
               className="img-about"
               src="https://static.wixstatic.com/media/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg/v1/fill/w_513,h_513,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg"
               alt=""
+              width="410"
+              height="410"
               srcSet="https://static.wixstatic.com/media/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg/v1/fill/w_513,h_513,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_ec1b885cde544df1bf299c3d35749700~mv2_d_3848_3848_s_4_2.jpg"
               fetchpriority="high"
             ></img>
@@ -383,7 +367,7 @@ function Home() {
         </div>
         <div style={{ marginTop: "10px", marginRight: "700px" }}>
           <div className="name">Jonny Sin</div>
-                <div className="title" style={{ marginTop: "10px"}}>Sharp</div>
+                <div className="title" style={{ marginBottom: "80px"}}>Sharp</div>
                 </div>
         <div className="about-container2">
           <div className="about-text2" data-aos="fade-right">
@@ -394,7 +378,7 @@ function Home() {
           <div className="testimonials-vet">
         <div className="testimonial-vet">
             <div className="quote">
-                <p>"Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat legam esse veniam culpa fore nisi cillum quid."</p>
+                <p>"Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat ."</p>
             </div>
             <div className="profile">
                 <img src="https://via.placeholder.com/80" alt="John Larson"/>
@@ -685,7 +669,7 @@ function Home() {
               href="#home"
               onClick={homePage}
               className="logo"
-              style={{ textDecoration: "none", color: "#CF0070" }}
+              style={{ textDecoration: "none", color: "#7b2cbf" }}
             >
               <FontAwesomeIcon icon={faPaw} /> Pet Center
             </a>
