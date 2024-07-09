@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { getDatabase, ref, get } from "firebase/database";
 import { useParams, useNavigate } from "react-router-dom";
 import { auth } from "../../Components/firebase/firebase";
+import { fetchBookingDetails } from "../booking/fetchBooking"; // Ensure correct path
 import Box from "@mui/material/Box";
 import Rating from "@mui/material/Rating";
+
+const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
 
 const BookingDetails = () => {
   const { bookingId } = useParams();
@@ -11,7 +15,7 @@ const BookingDetails = () => {
   const [medicalRecord, setMedicalRecord] = useState(null);
   const user = auth.currentUser;
   const navigate = useNavigate();
-  const [value, setValue] = React.useState(null);
+  const [value, setValue] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -19,39 +23,19 @@ const BookingDetails = () => {
       return;
     }
 
-    const fetchBookingDetails = async () => {
+    const fetchData = async () => {
       try {
-        const db = getDatabase();
-        const bookingRef = ref(db, `users/${user.uid}/bookings/${bookingId}`);
-        const snapshot = await get(bookingRef);
-        if (snapshot.exists()) {
-          const bookingData = snapshot.val();
-          setBooking(bookingData);
-          setValue(bookingData.rating); 
-
-          // Fetch medical record data
-          const medicalRecordRef = ref(db, `users/${user.uid}/bookings/${bookingId}/medicalRecord`);
-          const medicalRecordSnapshot = await get(medicalRecordRef);
-          if (medicalRecordSnapshot.exists()) {
-            setMedicalRecord(medicalRecordSnapshot.val());
-          } else {
-            console.log("No medical record available");
-          }
-        } else {
-          console.log("No data available");
-        }
+        const { booking, medicalRecord } = await fetchBookingDetails(user.uid, bookingId);
+        setBooking(booking);
+        setMedicalRecord(medicalRecord);
+        setValue(booking.rating);
       } catch (error) {
         console.error("Error fetching booking details:", error);
       }
     };
 
-    fetchBookingDetails();
+    fetchData();
   }, [user, bookingId]);
-  console.log(medicalRecord)
-
-  const capitalizeWords = (str) => {
-    return str.replace(/\b\w/g, char => char.toUpperCase());
-  };
 
   if (!booking) {
     return <p>Loading booking details...</p>;
@@ -133,26 +117,29 @@ const BookingDetails = () => {
                   </td>
                 </tr>
               )}
-              
             </tbody>
           </table>
           {medicalRecord && (
             <div>
               <h2>Medical Record</h2>
               <table className="booking-details-table">
-                      <tbody>
-                        {Object.entries(medicalRecord).map(([key, value]) => (
-                          key !== 'date' && ( 
-                          <tr key={key}>
-                            <td className="key-column">{capitalizeWords(key)}</td>
-                            <td className="value-column">{capitalizeWords(value)}</td>
-                          </tr>
-                          )
-                        ))}
-                      </tbody>
-                    </table>
-                </div>
-              )}
+                <tbody>
+                  {Object.entries(medicalRecord).map(([key, value]) => (
+                    <tr key={key}>
+                      <td className="key-column">{key}</td>
+                      <td className="value-column">
+                        {key === "cageRequired"
+                          ? value
+                            ? "True"
+                            : "False"
+                          : capitalizeFirstLetter(value.toString())}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           <button
             className="booking-detail back-button"
             onClick={() => navigate(-1)}

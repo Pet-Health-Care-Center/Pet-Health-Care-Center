@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaw, faUser } from "@fortawesome/free-solid-svg-icons";
 import { updateProfile } from "firebase/auth";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { fetchUserById } from "../account/getUserData";
 
 
 function Header({ user, currentPath }) {
@@ -18,6 +18,8 @@ function Header({ user, currentPath }) {
   const [headerVisible, setHeaderVisible] = useState(true);
   const location = useLocation();
   const [role, setRole] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
 
   const toggleDropdown = () => {
@@ -72,25 +74,29 @@ function Header({ user, currentPath }) {
   }, []);
 
   useEffect(() => {
-    if (user && user.uid) {
-      const db = getDatabase();
-      const userRef = ref(db, "users/" + user.uid);
-
-      onValue(userRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.role) {
-          setRole(data.role);
-        } else {
-          setRole("user");
-        }
-
-        if (data) {
-          setUsername(data.username);
-          setFullname(data.fullname);
-          setIsVerified(data.isVerified);
+    const fetchUserData = async () => {
+      try {
+        setLoading(true); // Start loading indicator
+        const userData = await fetchUserById(user.uid);
+        console.log('Fetched user data:', userData);
+  
+        if (userData) {
+          setRole(userData.role || "user");
+          setUsername(userData.username);
+          setFullname(userData.fullname);
+          setIsVerified(userData.isVerified);
           setHeaderVisible(true);
         }
-      });
+      } catch (error) {
+        setError(error.message);
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false); // Stop loading indicator
+      }
+    };
+  
+    if (user && user.uid) {
+      fetchUserData();
     } else {
       setHeaderVisible(true); // Ensure header is visible even if user is not logged in
     }
@@ -110,7 +116,7 @@ function Header({ user, currentPath }) {
       await updateProfile(auth.currentUser, {
         displayName: user.displayName,
       });
-      navigate("/account");
+      navigate(`/account/${user.uid}`)
     } catch (error) {
       console.error(error);
     }
@@ -159,7 +165,6 @@ function Header({ user, currentPath }) {
     !location.pathname.startsWith("/admin") &&
     !location.pathname.startsWith("/manager") &&
     !location.pathname.startsWith("/vet") &&
-    !location.pathname.startsWith("/booking-details") &&
     !location.pathname.startsWith("/rate-booking");
     
 

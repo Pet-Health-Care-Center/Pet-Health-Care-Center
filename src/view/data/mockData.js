@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { auth, database } from "../../Components/firebase/firebase";
-import { ref, get, onValue } from "firebase/database";
 import { tokens } from "../../theme";
+import { getAllUsers } from "../account/getUserData";
 
 let updatedDataTeam = [];
+console.log(updatedDataTeam);
+
 export let mockDataTeam = [];
 export let mockPieData = [];
 export let mockBarData = [];
+export let mockWithdrawData = [];
 export let mockTransactions = [];
 export let mockLineData = [
   {
@@ -43,7 +44,7 @@ const getMockTransactions = () => {
         let minute = strippedStr.slice(6, 8);
         let second = strippedStr.slice(8, 10);
         let formattedDate = `${currentYear}-${month}-${day}T${hour}:${minute}:${second}`;
-
+        // console.log("a" + formattedDate);
         transactions.push({
           bookingID: booking.bookingId,
           user: user.username,
@@ -52,6 +53,7 @@ const getMockTransactions = () => {
           formattedDate: formattedDate,
           status: booking.status,
           cost: booking.totalPaid || 0,
+          feeOfCancellation: booking.feeOfCancellation,
         });
       } else {
         console.warn(
@@ -68,40 +70,49 @@ const getMockTransactions = () => {
   return transactions;
 };
 
-const fetchUsers = () => {
-  const usersRef = ref(database, "users");
+const getMockWithdrawData = () => {
+  let withdrawList = [];
 
-  onValue(
-    usersRef,
-    (snapshot) => {
-      if (snapshot.exists()) {
-        const usersData = snapshot.val();
-        updatedDataTeam = [];
+  mockDataTeam.forEach((user) => {
+    for (const refundMoneyId in user.refundMoney) {
+      if (user.refundMoney.hasOwnProperty(refundMoneyId)) {
+        const withdraw = user.refundMoney[refundMoneyId];
+        let inputStr = withdraw.date;
 
-        for (const userId in usersData) {
-          if (usersData.hasOwnProperty(userId)) {
-            const user = usersData[userId];
-            const bookings = user.bookings || {};
-            updatedDataTeam.push({
-              id: userId,
-              ...user,
-              bookings: bookings,
-            });
-          }
-        }
+        const [datePart, timePart] = inputStr.split(/[,\s]+/);
+        const [month, day, year] = datePart.split("/");
+        const [hour, minute, second] = timePart.split(":");
 
-        mockDataTeam = updatedDataTeam;
-        mockTransactions = getMockTransactions();
-        getMockLineData();
-        mockPieData = getMockPieData();
-        mockBarData = getMockBarData();
+        let formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(
+          2,
+          "0"
+        )}T${hour}:${minute}:${second}`;
+
+        withdrawList.push({
+          accountNumber: withdraw.accountNumber,
+          amount: withdraw.amount,
+          bank: withdraw.bank,
+          date: withdraw.date,
+          formattedDate: formattedDate,
+          isRefund: withdraw.isRefund,
+          username: withdraw.username,
+          userId: withdraw.userId,
+          mail: withdraw.email,
+          refundDay: "",
+        });
       } else {
-        console.log("No data available");
+        console.warn(
+          `Skipping booking with undefined bookingId for user: ${user.username}`
+        );
       }
-    },
-    (error) => {console.error("Error fetching data: ", error);
     }
+  });
+
+  withdrawList.sort(
+    (a, b) => new Date(a.formattedDate) - new Date(b.formattedDate)
   );
+
+  return withdrawList;
 };
 
 const getMockLineData = () => {
@@ -184,7 +195,8 @@ const getMockBarData = () => {
             bookingDate.getMonth() === month
           ) {
             booking.services.forEach((serviceName) => {
-              if (serviceName === "Pet Veterinary") serviceName = "Pet_Veterinary";
+              if (serviceName === "Pet Veterinary")
+                serviceName = "Pet_Veterinary";
               if (serviceName === "Check-up") serviceName = "Check_up";
               monthData[serviceName]++;
             });
@@ -199,4 +211,41 @@ const getMockBarData = () => {
   return barData;
 };
 
+const fetchUsers = async () => {
+  try {
+    const userData = await getAllUsers();
+    console.log(userData);
+
+    updatedDataTeam.length = 0;
+
+    for (const userId in userData) {
+      if (userData.hasOwnProperty(userId)) {
+        const user = userData[userId];
+        const bookings = user.bookings || {};
+        updatedDataTeam.push({
+          id: userId,
+          ...user,
+          bookings: bookings,
+          refundMoney: user.refundMoney,
+        });
+      }
+    }
+
+    mockDataTeam = updatedDataTeam.slice();
+    mockTransactions = getMockTransactions();
+    getMockLineData();
+    mockWithdrawData = getMockWithdrawData();
+    mockPieData = getMockPieData();
+    mockBarData = getMockBarData();
+  } catch (error) {
+    console.error("Error fetching users: ", error);
+  } finally {
+    console.log("Data fetching completed.");
+  }
+};
+
 fetchUsers();
+
+setInterval(fetchUsers, 15000);
+
+export { fetchUsers };

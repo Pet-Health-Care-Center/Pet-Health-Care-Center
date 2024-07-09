@@ -8,6 +8,8 @@ import { ScaleLoader } from "react-spinners";
 import { css } from "@emotion/react";
 import useForceUpdate from "../../hooks/useForceUpdate";
 import { BookingContext } from "../../Components/context/BookingContext";
+import { fetchUserById } from "../account/getUserData";
+import { updateUserBooking } from "../../Components/transaction/fetchTransaction";
 
 const QrCodePage = () => {
   const { selectedPet, selectedServices, selectedDateTime } =
@@ -21,8 +23,11 @@ const QrCodePage = () => {
   const [accountBalance, setAccountBalance] = useState(0);
   const [totalPaid, setTotalPaid] = useState(0);
   const forceUpdate = useForceUpdate();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   
-  const userId = auth.currentUser.uid
+  const user = auth.currentUser
+  const userId = user.uid
   console.log(userId)
 
   const override = css`
@@ -48,133 +53,86 @@ const QrCodePage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const user = auth.currentUser;
-
-      if (user) {
-        const db = getDatabase();
-        const userRef = ref(db, "users/" + user.uid);
-
-        try {
-          const snapshot = await get(userRef);
-          const data = snapshot.val();
-          if (snapshot.exists()) {
-            setUsername(data.username);
-            setAccountBalance(data.accountBalance || 0);
-            console.log(data)
-          }
-          if (data && data.bookings) {
-            const bookings = data.bookings;
-            const booking = Object.values(bookings).find(
+      try {
+        setLoading(true); // Start loading indicator
+        const userData = await fetchUserById(user.uid);
+        console.log('Fetched user data:', userData);
+  
+        if (userData) {
+          setUsername(userData.username);
+          setAccountBalance(userData.accountBalance || 0);
+          if (userData.bookings) {
+            const booking = Object.values(userData.bookings).find(
               (b) => b.bookingId === bookingId
             );
             if (booking) {
               setTotalPaid(booking.totalPaid);
             }
           }
-        } catch (error) {
-          console.error("Error fetching user data: ", error);
         }
+      } catch (error) {
+        setError(error.message);
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false); // Stop loading indicator
       }
     };
+  
+    if (user && user.uid) {
+      fetchUserData();
+    }
+  }, [user, bookingId]);
 
-    fetchUserData();
-  }, [bookingId]);
   useEffect(() => {
     const user = auth.currentUser;
-
+  
     if (!username || !bookingId) return;
-
+  
     const intervalId = setInterval(async () => {
       try {
         const { descriptions, amounts } = await mockFetchTransactions();
         const contentTransfer = `thanhtoan ${bookingId}`;
-
+  
         const paymentIndex = descriptions.findIndex((description) =>
           description.includes(contentTransfer)
         );
-
+  
         console.log("Descriptions:", descriptions);
         console.log("Amounts:", amounts);
         console.log("Payment Index:", paymentIndex);
-
+  
         if (paymentIndex !== -1) {
           const paymentAmount = amounts[paymentIndex];
-          const db = getDatabase();
-          const userRef = ref(db, "users/" + user.uid);
-          const snapshot = await get(userRef);
-          const data = snapshot.val();
           const paymentAmountInSystem = paymentAmount / 1000;
-
-          if (!data) {
-            throw new Error("No user data found.");
-          }
-          const accountBalanceNumber = parseFloat(accountBalance);
-
-          const newAccountBalance =
-            accountBalanceNumber + paymentAmountInSystem - totalPaid;
-
-          if (newAccountBalance >= 0) {
-            await update(userRef, { accountBalance: newAccountBalance });
-            const bookingRef = ref(db, `users/${user.uid}/bookings`);
-            onValue(bookingRef, (snapshot) => {
-              const bookings = snapshot.val();
-              if (bookings) {
-                const bookingKey = Object.keys(bookings).find(
-                  (key) => bookings[key].bookingId === bookingId
-                );
-                if (bookingKey) {
-                  const specificBookingRef = ref(
-                    db,
-                    `users/${user.uid}/bookings/${bookingKey}`
-                  );
-                  update(specificBookingRef, { status: "Paid" });
-                }
-              }
-            });
-
-            const bookingSlotRef = ref(
-              db,
-              `users/${selectedDateTime.vet.uid}/schedule/${selectedDateTime.date}`
-            );
-            const bookingSlotSnapshot = await get(bookingSlotRef);
-            let bookedSlots = Array.isArray(bookingSlotSnapshot.val())
-              ? bookingSlotSnapshot.val()
-              : [];
-
-            bookedSlots.push({
-              time: selectedDateTime.time,
-              petName: selectedPet.name,
-              services: selectedServices.map((service) => service.name),
-              userAccount: user.email,
-              username: username,
-              status: 1,
-              bookingId: bookingId,
-              userId: userId
-            });
-
-            await set(
-              ref(
-                db,
-                `users/${selectedDateTime.vet.uid}/schedule/${selectedDateTime.date}`
-              ),
-              bookedSlots
-            );
-
-            toast.success(
-              "Payment successfully! Please your check booking section.",
-              {
-                autoClose: 2000,
-                onClose: () => {
-                  setTimeout(() => {
-                    forceUpdate();
-                    navigate("/manage-booking");
-                    window.location.reload()
-                  }, 500);
-                },
-              }
-            );
-            clearInterval(intervalId);
-          }
+  
+          const updateData = {
+            uid: user.uid,
+            bookingId,
+            paymentAmountInSystem,
+            totalPaid,
+            selectedDateTime,
+            selectedPet,
+            selectedServices,
+            username,
+            userId,
+          };
+  
+          await updateUserBooking(updateData);
+  
+          toast.success(
+            "Payment successfully! Please your check booking section.",
+            {
+              autoClose: 2000,
+              onClose: () => {
+                setTimeout(() => {
+                  forceUpdate();
+                  navigate("/manage-booking");
+                }, 500);
+              },
+            }
+          );
+  
+          clearInterval(intervalId);
         } else {
           console.log("Payment not found in transaction history");
         }
@@ -184,9 +142,10 @@ const QrCodePage = () => {
         setIsLoading(false);
       }
     }, 10000); // Check every 10 seconds
-
+  
     return () => clearInterval(intervalId);
   }, [navigate, username, bookingId, fetchTransactions, totalPaid]);
+  
 
   return (
     <div

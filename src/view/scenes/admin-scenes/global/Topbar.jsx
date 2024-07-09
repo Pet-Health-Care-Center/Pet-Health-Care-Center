@@ -9,13 +9,9 @@ import {
 } from "@mui/material";
 import { useContext } from "react";
 import { ColorModeContext, tokens } from "../../../../theme";
-import InputBase from "@mui/material/InputBase";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
-import SearchIcon from "@mui/icons-material/Search";
 import { auth } from "../../../../Components/firebase/firebase";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
@@ -30,7 +26,8 @@ const Topbar = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {console.log(user)
+      if (user) {
+        console.log(user);
         setUsername(user.displayName || user.email); // Use displayName if available, otherwise fallback to email
       } else {
         setUsername(""); // Clear username if no user is logged in
@@ -62,29 +59,33 @@ const Topbar = () => {
 
   return (
     <Box display="flex" justifyContent="space-between" p={2}>
-      <Typography variant="h6" mr={2}>
+      <Typography variant="h6" fontSize={20} mr={2}>
         Welcome, {username}
       </Typography>
-      
-    
 
       {/* ICONS */}
-      <Box display="flex">
-        <IconButton onClick={colorMode.toggleColorMode}>
-          {theme.palette.mode === "dark" ? (
-            <DarkModeOutlinedIcon />
-          ) : (
-            <LightModeOutlinedIcon />
-          )}
+      <Box display="flex" sx={{ alignItems: "center", gap: "16px" }}>
+        <IconButton
+          sx={{
+            fontSize: "25px",
+          }}
+        >
+          <NotificationsOutlinedIcon fontSize="inherit" />
         </IconButton>
-        <IconButton>
-          <NotificationsOutlinedIcon />
+        <IconButton
+          sx={{
+            fontSize: "25px",
+          }}
+        >
+          <SettingsOutlinedIcon fontSize="inherit" />
         </IconButton>
-        <IconButton>
-          <SettingsOutlinedIcon />
-        </IconButton>
-        <IconButton onClick={handleMenuOpen}>
-          <PersonOutlinedIcon />
+        <IconButton
+          onClick={handleMenuOpen}
+          sx={{
+            fontSize: "25px",
+          }}
+        >
+          <PersonOutlinedIcon fontSize="inherit" />
         </IconButton>
         <Menu
           anchorEl={anchorEl}
@@ -92,8 +93,12 @@ const Topbar = () => {
           onClose={handleMenuClose}
         >
           <div className="dropdown-topbar">
-            <MenuItem onClick={handleHomeClick}>Home</MenuItem>
-            <MenuItem onClick={handleLogoutClick}>Logout</MenuItem>
+            <MenuItem sx={{ fontSize: "15px" }} onClick={handleHomeClick}>
+              Home
+            </MenuItem>
+            <MenuItem sx={{ fontSize: "15px" }} onClick={handleLogoutClick}>
+              Logout
+            </MenuItem>
           </div>
         </Menu>
       </Box>

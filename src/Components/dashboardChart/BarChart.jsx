@@ -6,7 +6,7 @@ import { mockBarData as data } from "../../view/data/mockData";
 const BarChart = ({ isDashboard = false }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-
+  const keys = Object.keys(data[0]).filter((key) => key !== "months");
   return (
     <ResponsiveBar
       data={data}
@@ -39,7 +39,7 @@ const BarChart = ({ isDashboard = false }) => {
           },
         },
       }}
-      keys={["Pet_Veterinary", "Grooming", "Vaccination", "Check_up"]}
+      keys={keys}
       indexBy="months"
       margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
       padding={0.3}

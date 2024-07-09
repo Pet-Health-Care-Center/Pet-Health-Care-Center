@@ -1,56 +1,49 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useHistory } from "react-router-dom";
 import { BookingContext } from '../../Components/context/BookingContext';
-import { getDatabase, ref, push, update, get, set } from "firebase/database";
 import { auth } from "../../Components/firebase/firebase";
 import { toast, ToastContainer } from 'react-toastify';
 import useForceUpdate from '../../hooks/useForceUpdate';
 import {RiInformationLine} from '@remixicon/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faInfoCircle, faPaw, faBirthdayCake, faPalette, faArrowsAlt, faDog, faCat, faSyringe, faCheck, faCalendar, faUserMd, faClock, faMoneyBill, faCaretLeft, faEllipsis } from '@fortawesome/free-solid-svg-icons'
+import { faPaw, faBirthdayCake, faPalette, faArrowsAlt, faDog, faCat, faSyringe, faCheck, faCalendar, faUserMd, faClock, faMoneyBill, faCaretLeft, faEllipsis } from '@fortawesome/free-solid-svg-icons'
+import { fetchUserById } from '../account/getUserData';
+import { updateAccountBalance, addBooking, updateVetSchedule } from '../../view/booking/fetchAddBooking';
+import LoadingAnimation from "../../animation/loading-animation";
+
 
 const BookingConfirm = () => {
   const { selectedPet, selectedServices, selectedDateTime } = useContext(BookingContext);
-  const [user, setUser] = useState(null);
   const [accountBalance, setAccountBalance] = useState(0);
   const [username, setUsername] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const forceUpdate = useForceUpdate();
-  const currentUser = auth.currentUser;
-  const userId = currentUser.uid
-  console.log(userId)
+  const user = auth.currentUser;
+  const userId = user.uid
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-          setUser(currentUser);
-          const db = getDatabase();
-          const userRef = ref(db, "users/" + currentUser.uid);
-
-          const snapshot = await get(userRef);
-          const data = snapshot.val();
-          if (data) {
-            setUsername(data.username);
-            setAccountBalance(data.accountBalance);
+        const userData = await fetchUserById(user.uid);
+        console.log(userData)
+          if (userData) {
+            setUsername(userData.username);
+            setAccountBalance(userData.accountBalance);
           }
-          console.log(data)
-        }
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
 
     fetchUserData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (bookingSuccess) {
-      navigate('/manage-booking');
       window.location.reload()
     }
   }, [bookingSuccess, navigate]);
@@ -72,29 +65,14 @@ const BookingConfirm = () => {
     return `BK${day}${month}${hours}${minutes}${seconds}`;
   };
 
-  const addToDatabase = async (newBooking) => {
-    const db = getDatabase();
-    const bookingRef = ref(db, 'users/' + user.uid + '/bookings');
-    try {
-      await push(bookingRef, newBooking);
-
-    } catch (error) {
-      console.error("Error adding booking to database:", error);
-      toast.error("An error occurred while processing your booking. Please try again later.", {
-        autoClose: 2000,
-        onClose: () => {
-          forceUpdate();
-        }
-      });
-    }
-  };
-
   const handleConfirmBooking = async () => {
+    console.log('User ID:', userId); // Debug log
     const bookingId = generateBookingId();
     const totalPaid = calculateTotalPaid();
 
     if (user && selectedPet && selectedServices.length > 0 && selectedDateTime) {
       try {
+        setLoading(true);
         const serviceNames = selectedServices.map(service => service.name);
         const newBooking = {
           bookingId: bookingId,
@@ -110,17 +88,11 @@ const BookingConfirm = () => {
 
         if (accountBalance >= totalPaid) {
           const newBalance = accountBalance - totalPaid;
-          const userRef = ref(getDatabase(), "users/" + user.uid);
-          await update(userRef, { accountBalance: newBalance });
+          await updateAccountBalance(userId, newBalance);
           newBooking.status = "Paid";
-          await addToDatabase(newBooking);
+          await addBooking(userId, newBooking);
           
-          const db = getDatabase();
-          const bookingSlotRef = ref(db, `users/${selectedDateTime.vet.uid}/schedule/${selectedDateTime.date}`);
-          const bookingSlotSnapshot = await get(bookingSlotRef);
-          let bookedSlots = Array.isArray(bookingSlotSnapshot.val()) ? bookingSlotSnapshot.val() : [];
-    
-          bookedSlots.push({
+          const slot = {
             time: selectedDateTime.time,
             petName: selectedPet.name,
             services: selectedServices.map(service => service.name),
@@ -129,15 +101,15 @@ const BookingConfirm = () => {
             status: 1,
             bookingId: bookingId,
             userId: userId
-          });
-    
-          await set(ref(db, `users/${selectedDateTime.vet.uid}/schedule/${selectedDateTime.date}`), bookedSlots);
+          };
+          await updateVetSchedule(selectedDateTime.vet.uid, selectedDateTime.date, slot);
 
           toast.success("Booking successful! Please check your booking section.", {
             autoClose: 2000,
             onClose: () => {
               setBookingSuccess(true);
               forceUpdate();
+              setLoading(false);
             }
           });
         } else {
@@ -145,7 +117,7 @@ const BookingConfirm = () => {
           newBooking.status = "Pending Payment";
           newBooking.amountToPay = amountToPay;
 
-          await addToDatabase(newBooking);
+          await addBooking(userId, newBooking);
 
           const qrUrl = `https://img.vietqr.io/image/MB-0000418530364-print.png?amount=${amountToPay * 1000}&addInfo=thanhtoan%20${bookingId}&accountName=Nguyen%20Cong%20Duy%20Bao`;
 
@@ -154,6 +126,7 @@ const BookingConfirm = () => {
             onClose: () => {
               navigate("/qr", { state: { qrUrl, bookingId } });
               forceUpdate();
+              setLoading(false);
             },
           });
         }
@@ -165,7 +138,6 @@ const BookingConfirm = () => {
       toast.error("Incomplete booking details. Please review your selection.");
     }
   };
-
   const openModal = () => {
     setShowModal(true);
   };
@@ -189,13 +161,14 @@ const BookingConfirm = () => {
   }
   return (
     <div className="booking-confirm-container">
+      {loading && <LoadingAnimation />}
       <div className="booking-confirm">
         <div className="booking-details">
           <div className="confirm-pet-info">
             <p className="confirm-pet-title">
           <RiInformationLine className="icon icon-info" />
               <strong>PET INFOMATION</strong>
-            </p>
+            </p>  
             {selectedPet.imageUrl && (
               <img
                 src={selectedPet.imageUrl}

@@ -10,6 +10,7 @@ import { ScaleLoader } from "react-spinners";
 import { Pagination, PaginationItem } from "@mui/material";
 import { makeStyles } from "@mui/styles"; // Import makeStyles
 import useViewport from "./useViewport";
+import { fetchPetsByUserId } from './fetchPet';
 
 const useStyles = makeStyles({
   pagination: {
@@ -18,6 +19,7 @@ const useStyles = makeStyles({
     fontSize: "1.5rem",
     marginTop: "0",
     paddingBottom: "2rem",
+    marginBottom: "5rem",
     "& .MuiPaginationItem-root": {
       fontSize: "1.5rem",
       marginLeft: "2rem",
@@ -27,6 +29,7 @@ const useStyles = makeStyles({
       border: "1px solid var(--neon-color)",
       color: "#fff",
       transition: "all 0.3s ease",
+      marginBottom: "2rem",
       "&:hover": {
         backgroundColor: "#f0f0f0",
         borderColor: "#999",
@@ -49,14 +52,13 @@ const Pet = () => {
   const [currentPage, setCurrentPage] = useState(1); // Trang hiện tại
   const classes = useStyles();
   const { width } = useViewport(); // Get the viewport width
-
-  const [petsPerPage, setPetsPerPage] = useState(10); // Default value
+  const [petsPerPage, setPetsPerPage] = useState(8); // Default value
 
   useEffect(() => {
     if (width >= 1785) {
       setPetsPerPage(12);
     } else if (width >= 991 && width < 1600) {
-      setPetsPerPage(10);
+      setPetsPerPage(8);
     } else if (width >= 991 && width < 1600) {
       setPetsPerPage(5);
     } else {
@@ -83,28 +85,20 @@ const Pet = () => {
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUser(user);
-        const db = getDatabase();
-        const petRef = ref(db, "users/" + user.uid + "/pets");
-        const unsubscribePets = onValue(petRef, (snapshot) => {
-          const pets = snapshot.val();
-          if (pets) {
-            const petList = Object.entries(pets).map(([key, value]) => ({
-              ...value,
-              key,
-            }));
-            setPets(petList);
-            setPetCount(petList.length);
-            setLoading(false);
-          } else {
-            setPets([]);
-            setPetCount(0);
-            setLoading(false);
-          }
-        });
-        return () => unsubscribePets();
+        try {
+          const petData = await fetchPetsByUserId(user.uid);
+          setPets(petData.pets);
+          setPetCount(petData.pets.length);
+        } catch (error) {
+          console.error("Error fetching pets:", error);
+          setPets([]);
+          setPetCount(0);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setPets([]);
@@ -112,6 +106,7 @@ const Pet = () => {
         setLoading(false);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -197,7 +192,7 @@ const Pet = () => {
                   style={{
                     textAlign: "center",
                     marginBottom: "1rem",
-                    marginTop: "2rem",
+                    marginTop: "3rem",
                     fontSize: "3rem",
                   }}
                 >

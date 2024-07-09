@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { getDatabase, ref, get, update } from "firebase/database";
 import { useParams, useNavigate } from "react-router-dom";
 import { auth } from "../../Components/firebase/firebase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
-import SparkleButton from "../../hooks/sparkleButton";
-import Calendar from "react-calendar";
 import { toast, ToastContainer } from "react-toastify";
 import useForceUpdate from "../../hooks/useForceUpdate";
+import { fetchUserById } from '../account/getUserData';
+import { fetchPetDetails, fetchPetMedicalHistory, updatePetDetails } from './fetchPet';
+import moment from "moment";
 
 const PetDetail = () => {
   const { petId } = useParams();
@@ -16,7 +16,8 @@ const PetDetail = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const forceUpdate = useForceUpdate();
   const [medicalHistory, setMedicalHistory] = useState([]);
-  const [petAvatar, setPetAvatart] = useState("")
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const catBreeds = [
     "-- Select Your Cat Breeds --",
@@ -193,6 +194,7 @@ const PetDetail = () => {
       setSelectedBreeds(dogBreeds);
     }
   };
+
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -201,10 +203,30 @@ const PetDetail = () => {
     breed: "",
     dob: "",
     gender: "",
+    imageUrl: "",
   });
 
   const user = auth.currentUser;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await fetchUserById(user.uid);
+        console.log('Fetched user data:', userData);
+        setUserData(userData);
+      } catch (error) {
+        setError(error.message);
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user && user.uid) {
+      fetchUserData();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -212,43 +234,22 @@ const PetDetail = () => {
       return;
     }
 
-    const fetchUserData = async () => {
+    const fetchPetData = async () => {
       try {
-        const db = getDatabase();
-        const userRef = ref(db, `users/${user.uid}`);
-        const snapshot = await get(userRef);
-        if (snapshot.exists()) {
-          setUserData(snapshot.val());
-        } else {
-          console.log("No user data available");
-        }
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-      }
-    };
-
-    const fetchPetDetails = async () => {
-      try {
-        const db = getDatabase();
-        const petRef = ref(db, `users/${user.uid}/pets/${petId}`);
-        const snapshot = await get(petRef);
-        if (snapshot.exists()) {
-          const petData = snapshot.val();
-          setPet(petData);
-            setPetAvatart(petData.imageUrl);
-          setFormData({
-            name: petData.name,
-            age: petData.age,
-            weight: petData.weight,
-            type: petData.type,
-            breed: petData.breed,
-            dob: petData.dob,
-            gender: petData.gender,
-            color: petData.color
-          });
-        } else {
-          console.log("No pet data available");
-        }
+        const petData = await fetchPetDetails(user.uid, petId);
+        console.log('Fetched pet data:', petData);
+        setPet(petData.pet);
+        setFormData({
+          name: petData.pet.name,
+          age: petData.pet.age,
+          weight: petData.pet.weight,
+          type: petData.pet.type,
+          breed: petData.pet.breed,
+          dob: petData.pet.dob,
+          gender: petData.pet.gender,
+          color: petData.pet.color,
+          imageUrl: petData.pet.imageUrl
+        });
       } catch (error) {
         console.error("Error fetching pet details:", error);
       }
@@ -256,26 +257,16 @@ const PetDetail = () => {
 
     const fetchMedicalHistoryData = async () => {
       try {
-        const db = getDatabase();
-        const petRef = ref(
-          db,
-          `users/${user.uid}/pets/${petId}/medicalHistory`
-        );
-        const snapshot = await get(petRef);
-        if (snapshot.exists()) {
-          const medicalHistoryData = snapshot.val();
-          setMedicalHistory(medicalHistoryData);
-        } else {
-          console.log("No medical history data available");
-        }
+        const medicalHistoryData = await fetchPetMedicalHistory(user.uid, petId);
+        console.log('Fetched medical history data:', medicalHistoryData);
+        setMedicalHistory(medicalHistoryData.medicalHistory);
       } catch (error) {
         console.error("Error fetching medical history data:", error);
       }
     };
 
+    fetchPetData();
     fetchMedicalHistoryData();
-    fetchUserData();
-    fetchPetDetails();
   }, [user, petId]);
 
   const capitalize = (str) => {
@@ -292,34 +283,25 @@ const PetDetail = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(value);
     setFormData((prevData) => ({
       ...prevData,
       [name]: value || "",
     }));
   };
+
   const handleUpdateClick = async () => {
-    const updatedFormData = { ...formData };
-
-    Object.keys(updatedFormData).forEach((key) => {
-      if (updatedFormData[key] === undefined) {
-        updatedFormData[key] = "";
-      }
-    });
-
     try {
-      const db = getDatabase();
-      const petRef = ref(db, `users/${user.uid}/pets/${petId}`);
-      await toast.promise(update(petRef, updatedFormData), {
-        success: "Update successful! Please check your pet information again!.",
+      await updatePetDetails(user.uid, petId, formData);
+      toast.success('Updated pet data successful!', {
+        autoClose: 2000,
       });
-      setPet(updatedFormData);
+      setPet(formData);
       setIsEditMode(false);
-      forceUpdate();
     } catch (error) {
       console.error("Error updating pet details:", error);
     }
   };
+
   const calculateAge = (dob) => {
     const birthDate = new Date(dob);
     const difference = Date.now() - birthDate.getTime();
@@ -336,6 +318,7 @@ const PetDetail = () => {
       age: age.toString(),
     }));
   };
+
   if (!pet || !userData) {
     return <p>Loading pet details...</p>;
   }
@@ -347,13 +330,13 @@ const PetDetail = () => {
         minHeight: "100vh",
         position: "relative",
         width: "100%",
-        backgroundColor: "#EBEFF2",
+        background: "linear-gradient(to right, #fcecea, #fef7ed)",
         overflowY: "auto",
       }}
     >
       <div className="pet-profile-wrapper">
         <div className="left-panel pet-detail">
-          <img src={petAvatar} alt="Pet Avatar" className="pet-avatar" />
+          <img src={formData.imageUrl} alt="Pet Avatar" className="pet-avatar" />
           <div className="owner-info">
             <h3>Pet Parent</h3>
             <div style={{ display: "flex" }}>
@@ -407,21 +390,25 @@ const PetDetail = () => {
                 <div className="section pet-general-info">
                   <div className="pet-info">
                     <p>D.O.B:</p>
-                    <div>{pet.dob || "N/A"}</div>
+                    <div>
+                      {moment(pet.dob).format("DD/MM/YYYY") || "N/A"}
+                    </div>
                   </div>
                   <div className="pet-info">
                     <p>Breed:</p>
                     <div>{pet.breed || "N/A"}</div>
                   </div>
                   <div className="pet-info">
-                    <p>Gender:</p>
-                    <div>{pet.gender || "N/A"}</div>
+                    <p>Color:</p>
+                    <div>{pet.color || "N/A"}</div>
                   </div>
                 </div>
               </div>
               <div>
                 <div>
-                  <h2>Medical Record</h2>
+                  <h2 style={{
+                    margin: "24px 0px 12px 0px",
+                  }}>Medical Record</h2>
                   <div className="scrollable-container">
                     {medicalHistory &&
                       medicalHistory.map((record, index) => (
@@ -471,6 +458,9 @@ const PetDetail = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -479,6 +469,9 @@ const PetDetail = () => {
                   name="type"
                   value={formData.type}
                   onChange={handleTypeChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 >
                   <option value="">-- Select Your Pet Type --</option>
                   <option value="Cat">Cat</option>
@@ -492,6 +485,9 @@ const PetDetail = () => {
                   name="color"
                   value={formData.color}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -500,6 +496,9 @@ const PetDetail = () => {
                   name="breed"
                   value={formData.breed}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 >
                   {selectedBreeds.map((breed, index) => (
                     <option key={index} value={breed}>
@@ -515,6 +514,9 @@ const PetDetail = () => {
                   name="dob"
                   value={formData.dob}
                   onChange={handleDobChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -524,13 +526,20 @@ const PetDetail = () => {
                   name="weight"
                   value={formData.weight}
                   onChange={handleInputChange}
+                  style={{
+                    zIndex: "10000000",
+                  }}
                 />
               </div>
               <div className="button-group">
-                <button className="cancel-button" onClick={handleCancelClick}>
+                <button className="cancel-button" onClick={handleCancelClick}                   style={{
+                    zIndex: "10000000",
+                  }}>
                   Cancel
                 </button>
-                <button className="update-button" onClick={handleUpdateClick}>
+                <button                   style={{
+                    zIndex: "10000000",
+                  }} className="update-button" onClick={handleUpdateClick}>
                   Update
                 </button>
               </div>

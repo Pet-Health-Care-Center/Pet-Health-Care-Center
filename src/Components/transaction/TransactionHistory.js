@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { TransactionContext } from '../context/TransactionContext';
+import {fetchTransactions} from "./fetchTransaction"
 
 const TransactionHistory = () => {
   const { setDescriptions, setAmounts } = useContext(TransactionContext);
@@ -8,24 +9,9 @@ const TransactionHistory = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(process.env.REACT_APP_CASSO_API_URL, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Apikey ${process.env.REACT_APP_CASSO_API_KEY}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        const descriptions = result.data.records.map(record => record.description);
-        console.log(descriptions)
-        const amounts = result.data.records.map(record => record.amount);
-        console.log(amounts)
-        setDescriptions(descriptions);
-        setAmounts(amounts)
+        const result = await fetchTransactions();
+        setDescriptions(result.descriptions);
+        setAmounts(result.amounts);
       } catch (error) {
         setError(error.message);
       }

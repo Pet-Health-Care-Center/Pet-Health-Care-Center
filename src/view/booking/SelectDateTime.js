@@ -1,11 +1,12 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookingContext } from "../../Components/context/BookingContext";
-import { getDatabase, ref, get } from "firebase/database";
+import { getDatabase, ref, get, onValue } from "firebase/database";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretLeft, faCaretRight } from "@fortawesome/free-solid-svg-icons";
+import { fetchAllBookings, fetchVets } from "./fetchAllBookingData";
 
 const generateTimeSlots = (startTime, endTime, interval) => {
   const slots = [];
@@ -46,59 +47,35 @@ const SelectDateTime = () => {
   }, [selectedPet, selectedServices, navigate]);
 
   useEffect(() => {
-    const fetchVets = async () => {
-      const db = getDatabase();
-      const vetsRef = ref(db, "users");
-      const snapshot = await get(vetsRef);
-      const vetsData = snapshot.val();
-      const vetsList = Object.keys(vetsData)
-        .filter((uid) => vetsData[uid].role === "veterinarian")
-        .map((uid) => ({
-          uid,
-          name: vetsData[uid].fullname,
-          schedule: vetsData[uid].schedule || {},
-          specialization: vetsData[uid].specialization,
-        }));
-      setVets(vetsList);
+    const fetchVetsData = async () => {
+      try {
+        const data = await fetchVets();
+        setVets(data.vets);
+      } catch (error) {
+        console.error('Error fetching veterinarians:', error);
+      }
     };
 
-    fetchVets();
+    fetchVetsData();
   }, []);
 
   useEffect(() => {
-    const fetchAllBookings = async () => {
-      const db = getDatabase();
-      const usersRef = ref(db, "users");
-      const snapshot = await get(usersRef);
-      const usersData = snapshot.val();
-      let allBookings = [];
-
-      if (usersData) {
-        Object.keys(usersData).forEach((userId) => {
-          const userData = usersData[userId];
-          if (userData.bookings) {
-            Object.keys(userData.bookings).forEach((bookingId) => {
-              const booking = userData.bookings[bookingId];
-              allBookings.push({
-                userId,
-                bookingId,
-                ...booking,
-              });
-            });
-          }
-        });
+    const fetchBookingsData = async () => {
+      try {
+        const data = await fetchAllBookings();
+        setBookedSlots(data.bookings);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
       }
-      setBookedSlots(allBookings);
     };
 
-    fetchAllBookings();
+    fetchBookingsData();
   }, []);
 
   const morningSlots = generateTimeSlots(600, 720, 15); // 10:00 AM to 11:45 AM
   const afternoonSlots = generateTimeSlots(720, 1080, 15); // 12:00 PM to 4:45 PM
 
   const availableVets = date ? vets.filter((vet) => vet.schedule[date]) : [];
-  vets.forEach((vet) => console.log("Vet Schedule:", vet.schedule));
 
   const handleNext = async () => {
     if (date && vet && selectedTime) {
@@ -134,8 +111,6 @@ const SelectDateTime = () => {
       alert("Please select a date, vet, and time.");
     }
   };
-
-  console.log(availableVets);
 
   const tileDisabled = ({ date }) => {
     const today = new Date();
@@ -173,9 +148,6 @@ const SelectDateTime = () => {
             bookedSlot.status === "Rated")
       );
 
-      console.log(
-        `Slot: ${slot.timeString}, Is Booked: ${isBooked}, Is Past: ${isPast}`
-      );
 
       return (
         <button

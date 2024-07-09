@@ -22,6 +22,7 @@ import Vet from "../src/view/vet/VetDashboard"
 import { auth } from "./Components/firebase/firebase";
 import "./App.css";
 import Rating from "./view/booking/RateBooking"
+import StickyContactBar from "./view/partials/StickyContactBar";
 
 function MainContent() {
   const location = useLocation();
@@ -70,10 +71,11 @@ function MainContent() {
             <Routes>
               <Route path="/signIn" element={<SignIn />} />
               <Route path="/" element={<Home />} />
-              <Route path="/account" element={<Update user={userRef.current}/>} />
+              <Route path="/account/:userId1" element={<Update  user={userRef.current} />} />
+              {/* <Route path="/account" element={<Update user={userRef.current}/>} /> */}
               <Route path="/admin/*" element={<Admin />} />
               <Route path="/vet/*" element={<Vet />} />
-              <Route path="/manager" element={<Manager />} />
+              <Route path="/manager/*" element={<Manager />} />
               <Route path="/pet" element={<Pet />} />
               <Route path="/pet/add" element={<AddPet />} />
               <Route path="/pet/add/details" element={<AddPetNext />} />
@@ -88,6 +90,7 @@ function MainContent() {
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
+          <StickyContactBar currentPath={currentPath} />
           <Footer currentPath={currentPath} />
         </>
       )}

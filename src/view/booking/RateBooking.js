@@ -24,6 +24,8 @@ import { faCaretLeft } from "@fortawesome/free-solid-svg-icons";
 import useForceUpdate from "../../hooks/useForceUpdate";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import { fetchUserById } from "../account/getUserData";
+
 
 const labels = {
   0.5: "Useless",
@@ -54,24 +56,36 @@ const RatingBooking = () => {
   const [fontWeight, setFontWeight] = React.useState("normal");
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [username, setUsername] = useState("");
+  const [avatar, setAvatar] = useState("");
   const forceUpdate = useForceUpdate();
-  const user = auth.currentUser;
+  const [error, setError] = useState(null);
+
+  const user = auth.currentUser
+
 
   useEffect(() => {
-    if (user && user.uid) {
-      const db = getDatabase();
-      const userRef = ref(db, "users/" + user.uid);
+    const getUser = async () => {
+      try {
+        const userData = await fetchUserById(user.uid);
+        console.log(userData)
+        setUsername(userData.username);
+        setAvatar(userData.avatar)
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      onValue(userRef, (snapshot) => {
-        const data = snapshot.val();
-
-        if (data) {
-          setUsername(data.username);
-        }
-      });
+    if (user.uid) {
+      getUser();
     }
-  }, [user]);
+  }, [user.uid]);
+  console.log(username)
+  console.log(avatar)
 
+
+  
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
@@ -113,7 +127,10 @@ const RatingBooking = () => {
         rating,
         review,
         status: "Rated",
+        petOwner: {
         username: username,
+          avatar: avatar
+        }
       });
       toast.success("Rating submitted successfully!", {
         autoClose: 1500,

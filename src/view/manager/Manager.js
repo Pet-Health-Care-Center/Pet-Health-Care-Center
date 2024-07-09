@@ -1,59 +1,73 @@
-import { useNavigate } from "react-router-dom";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser } from '@fortawesome/free-solid-svg-icons';
-import { auth } from "../../Components/firebase/firebase";
-import React, { useState, useEffect } from 'react';
-import { getDatabase, ref, onValue } from "firebase/database";
-import { ScaleLoader } from 'react-spinners';
-import { css } from "@emotion/react";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 
-const Manager = () => {
+import { CssBaseline, ThemeProvider } from "@mui/material";
+import "react-toastify/dist/ReactToastify.css";
+import { ColorModeContext, useMode } from "../../theme";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import Schedule from "../scenes/manager-scenes/schedule/shedule";
+
+import "react-toastify/dist/ReactToastify.css";
+
+import Topbar from "../scenes/manager-scenes/global/Topbar";
+import Sidebar from "../scenes/manager-scenes/global/Sidebar";
+import Dashboard from "../scenes/manager-scenes/dashboard";
+import VetManagement from "../scenes/manager-scenes/vetManagement/vetManagement";
+import Cage from "../scenes/manager-scenes/cage/cage";
+
+import { auth } from "../../Components/firebase/firebase";
+import Booking from "../scenes/manager-scenes/manageBooking/manageBooking";
+
+function ManagerDashboard() {
+  const [theme, colorMode] = useMode();
+  const [isSidebar, setIsSidebar] = useState(true);
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const override = css`
-    display: block;
-    margin: 0 auto;
-    border-color: red;
-  `;
-
-  const Loading = () => {
-    return
-  };
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         const db = getDatabase();
-        const userRef = ref(db, 'users/' + user.uid);
+        const userRef = ref(db, "users/" + user.uid);
 
         onValue(userRef, (snapshot) => {
           const data = snapshot.val();
           if (data.role === "user") {
-            toast.error("You cant entry to this site!")
+            toast.error("You can't access this site!");
             navigate("/");
           } else if (data.role === "admin") {
-            toast.error("You cant entry to this site!")
-            navigate("/admin");
+            toast.error("You can't access this site!");
+            navigate("/admin/dashboard");
           } else if (data.role === "veterinary") {
-            toast.error("You cant entry to this site!")
+            toast.error("You can't access this site!");
             navigate("/veterinary");
-          }
-          else {
+          } else {
             setUser(user);
-            const usersRef = ref(db, 'users');
+            setUserRole(data.role);
+            const usersRef = ref(db, "users");
             const unsubscribeUsers = onValue(usersRef, (snapshot) => {
               const usersData = snapshot.val();
               if (usersData) {
-                const userList = Object.entries(usersData).map(([uid, userData]) => ({
-                  uid,
-                  ...userData
-                }));
-                const veterinarianUsers = userList.filter(user => user.role === 'veterinarian');
+                const userList = Object.entries(usersData).map(
+                  ([uid, userData]) => ({
+                    uid,
+                    ...userData,
+                  })
+                );
+                const veterinarianUsers = userList.filter(
+                  (user) => user.role === "veterinarian"
+                );
                 setUsers(veterinarianUsers);
                 setLoading(false);
               } else {
@@ -76,46 +90,34 @@ const Manager = () => {
   }, [navigate]);
 
   if (loading) {
-    return <Loading />;
+    return;
+  }
+
+  if (!user || !userRole) {
+    return <Navigate to="/signIn" />;
   }
 
   return (
-    <div className="parent-container">
-        {user ? (
-          <div className="user-list">
-            <h1>Veterinarian Management</h1>
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Specialization</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user, index) => (
-                    <tr key={user.uid}>
-                      <td>{index + 1}</td>
-                      <td>{user.uid}</td>
-                      <td>{user.username}</td>
-                      <td>{user.specialization}</td>
-                      <td style={{ backgroundColor: user.status === 'Busy' ? 'red' : 'green' }}>
-                  {user.status}
-                </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : (
-          <h1>Please log in to manage users.</h1>
-        )}
-    </div>
+    <ColorModeContext.Provider value={colorMode}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ToastContainer />
+        <div className="app">
+          <Sidebar isSidebar={isSidebar} />
+          <main className="content">
+            <Topbar setIsSidebar={setIsSidebar} />
+            <Routes>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="schedule" element={<Schedule />} />
+              <Route path="manageBooking" element={<Booking />} />
+              <Route path="cage" element={<Cage />} />
+              <Route path="vetManagement" element={<VetManagement />} />
+            </Routes>
+          </main>
+        </div>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
   );
-};
+}
 
-export default Manager;
+export default ManagerDashboard;

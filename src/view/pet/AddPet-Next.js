@@ -3,7 +3,6 @@ import "./AddPet.css"; // Import the CSS file
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import { getDatabase, ref, push, set, get } from "firebase/database";
 import {
   getStorage,
   ref as storageRef,
@@ -18,61 +17,44 @@ import { faCaretLeft } from "@fortawesome/free-solid-svg-icons";
 import Button from '@mui/material/Button';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import Box from '@mui/material/Box';
-import useForceUpdate from "../../hooks/useForceUpdate";
+import {addPet} from "./fetchPet"
+import LoadingAnimation from "../../animation/loading-animation";
 
 const AddPetNext = () => {
   const { petData, updatePetData, clearPetData } = useContext(AddPetContext);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const auth = getAuth(); 
-  const forceUpdate = useForceUpdate()
-  console.log(petData)
+  const auth = getAuth();
 
-  const addDataBase = async (userId, imageUrl) => {
-    try {
-      const db = getDatabase();
-      const newPetRef = push(ref(db, `users/${userId}/pets`));
-      await set(newPetRef, {
-        name: petData.name,
-        age: petData.age,
-        type: petData.type,
-        weight: petData.weight,
-        imageUrl: imageUrl,
-        dob: petData.dob,
-      });
-      toast.success("Pet added successfully. You can view it in your collection!", {
-        autoClose: 2000,
-        onClose: () => {
-          forceUpdate()
-          setTimeout(() => {
-            navigate("/pet");
-          }, 500); // Delay for 2 seconds (2000 milliseconds)
-        }
-      });
-      clearPetData()
-    } catch (error) {
-      toast.error("Error adding pet: " + error.message);
-    }
-  };
-  
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     const user = auth.currentUser;
+
     if (user) {
       if (petData.image) {
         const storage = getStorage();
-        const storageReference = storageRef(
-          storage,
-          `pets/${user.uid}/${uuidv4()}`
-        );
+        const storageReference = storageRef(storage, `pets/${user.uid}/${uuidv4()}`);
+        
         uploadBytes(storageReference, petData.image)
           .then((snapshot) => {
             getDownloadURL(snapshot.ref)
-              .then((url) => {
-                addDataBase(user.uid, url);
-                setLoading(false);
+              .then(async (url) => {
+                try {
+                  await addPet(user.uid, { ...petData, imageUrl: url });
+                  toast.success("Pet added successfully. You can view it in your collection!", {
+                    autoClose: 2000,
+                    onClose: () => {
+                      setLoading(false);
+                      navigate("/pet");
+                      clearPetData();
+                    }
+                  });
+                } catch (error) {
+                  console.error("Error adding pet:", error);
+                  toast.error("Error adding pet: " + error.message);
+                  setLoading(false);
+                }
               })
               .catch((error) => {
                 console.error("Error getting download URL:", error);
@@ -84,14 +66,26 @@ const AddPetNext = () => {
             setLoading(false);
           });
       } else {
-        addDataBase(user.uid, "");
-        setLoading(false);
+        try {
+          await addPet(user.uid, { ...petData, imageUrl: "" });
+          toast.success("Pet added successfully. You can view it in your collection!", {
+            autoClose: 2000,
+            onClose: () => {
+              setLoading(false);
+              navigate("/pet");
+              clearPetData();
+            }
+          });
+        } catch (error) {
+          console.error("Error adding pet:", error);
+          toast.error("Error adding pet: " + error.message);
+          setLoading(false);
+        }
       }
     } else {
       toast.error("User not logged in.");
       setLoading(false);
     }
-    
   };
 
   const calculateAge = (dob) => {
@@ -99,20 +93,21 @@ const AddPetNext = () => {
     const now = new Date();
     let age = now.getFullYear() - birthDate.getFullYear();
     const monthDiff = now.getMonth() - birthDate.getMonth();
-  
+
     if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
       age--;
     }
-  
+
     return age;
   };
 
   const handleDobChange = (event) => {
     const dob = event.target.value;
     const age = calculateAge(dob);
-    updatePetData("age", age); 
-    updatePetData("dob", dob); 
+    updatePetData("age", age);
+    updatePetData("dob", dob);
   };
+
   const VisuallyHiddenInput = ({ ...props }) => (
     <input
       {...props}
@@ -129,14 +124,16 @@ const AddPetNext = () => {
       }}
     />
   );
+
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
-      updatePetData("image", e.target.files[0]); // For single image
+      updatePetData("image", e.target.files[0]);
     }
   };
 
   return (
     <div className="parent-container parent-container1">
+          {loading && <LoadingAnimation />}
       <h2 className="title-add-next-pet">Step 2: Add Pet Info</h2>
       <p className="des-add-next-pet">Tell us more about your Pet</p>
       <div className="container container1 pet-container" id="container">

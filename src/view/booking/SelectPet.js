@@ -10,6 +10,8 @@ import { BookingContext } from '../../Components/context/BookingContext';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaw } from "@fortawesome/free-solid-svg-icons";
 import imageNopet from "../../public/assets/Remove-bg.ai_1716049467772.png"
+import {fetchPetsByUserId} from "../pet/fetchPet"
+import { getAuth } from 'firebase/auth';
 
 const useStyles = makeStyles({
   pagination: {
@@ -18,6 +20,7 @@ const useStyles = makeStyles({
     fontSize: "1.5rem",
     marginTop: "0",
     paddingBottom: "2rem",
+    marginBottom: "5rem",
     "& .MuiPaginationItem-root": {
       fontSize: "1.5rem",
       marginLeft: "2rem",
@@ -27,10 +30,15 @@ const useStyles = makeStyles({
       border: "1px solid var(--neon-color)",
       color: "#fff",
       transition: "all 0.3s ease",
+      marginBottom: "2rem",
       "&:hover": {
         backgroundColor: "#f0f0f0",
         borderColor: "#999",
         color: "#000",
+      },
+      "&.Mui-selected": {
+        backgroundColor: "rgba(0, 0, 0, 0.08);",
+        color: "#fff",
       },
     },
   },
@@ -45,13 +53,13 @@ const SelectPet = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const classes = useStyles();
   const { width } = useViewport();
-  const [petsPerPage, setPetsPerPage] = useState(10);
+  const [petsPerPage, setPetsPerPage] = useState(8);
 
   useEffect(() => {
     if (width >= 1785) {
       setPetsPerPage(12);
     } else if (width >= 991 && width < 1600) {
-      setPetsPerPage(10);
+      setPetsPerPage(8);
     } else if (width >= 991 && width < 1600) {
       setPetsPerPage(5);
     } else {
@@ -60,26 +68,19 @@ const SelectPet = () => {
   }, [width]);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUser(user);
-        const db = getDatabase();
-        const petRef = ref(db, "users/" + user.uid + "/pets");
-        const unsubscribePets = onValue(petRef, (snapshot) => {
-          const pets = snapshot.val();
-          if (pets) {
-            const petList = Object.entries(pets).map(([key, value]) => ({
-              ...value,
-              key,
-            }));
-            setPets(petList);
-            setLoading(false);
-          } else {
-            setPets([]);
-            setLoading(false);
-          }
-        });
-        return () => unsubscribePets();
+        try {
+          const petData = await fetchPetsByUserId(user.uid);
+          setPets(petData.pets);
+        } catch (error) {
+          console.error('Error fetching pets:', error);
+          setPets([]);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setPets([]);
@@ -114,7 +115,7 @@ const SelectPet = () => {
 
   return (
     <div className="pet-page">
-      <div className="parent-container">
+      <div className="parent-container select-pet-container">
         <div className="pet-manage">
           {user ? (
             pets.length === 0 ? (
