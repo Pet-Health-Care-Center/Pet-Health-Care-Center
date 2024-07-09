@@ -351,51 +351,63 @@ function Home() {
           </div>
           <div className="about-text" data-aos="fade-left">
             <span className="text-about">
-              Over 16 Years of Veterinary Experience
+            Awarded for excellence and innovation in pet medical examination and treatment
+            
             </span>
             <p className="font_1">
               <span className="text1-about">
-                With over 16 years of experience working in the field of
-                veterinary medicine, I am a passionate veterinarian with a deep
-                understanding of the health and happiness of pet animals. I
-                graduated from Hanoi National University School of Medicine and
-                have worked at many reputable veterinary clinics and veterinary
-                hospitals throughout the area. Through thousands of animal
-                treatment and care cases, I have accumulated valuable experience
-                and diverse professional skills. I am always dedicated and
-                dedicated to caring for each patient, along with dedicated
-                understanding and advice to owners on how to care for and
-                protect their pets' health.
+              I am deeply honored to receive the "Veterinarians of the Year" award. 
+              I sincerely thank the organizers and colleagues for their trust and votes. 
+              Thank you to all pet owners for your continued trust and support. 
+              I am committed to continuing my dedication to providing the best veterinary care services. 
+              Sincerely, thank you!
               </span>
             </p>
           </div>
+          
         </div>
-        <div className="about-container">
+        <div style={{ marginTop: "10px", marginRight: "700px" }}>
+          <div className="name">Jonny Sin</div>
+                <div className="title" style={{ marginBottom: "80px"}}>Sharp</div>
+                </div>
+        <div className="about-container2">
           <div className="about-text2" data-aos="fade-right">
-            <span className="text-about">
-              Over 16 Years of Veterinary Experience
+            <span className="text-about2">
+            There are also other doctors who have also made efforts this year
             </span>
-            <p className="font_1">
-              <span className="text1-about">
-                In addition to my daily work, I also regularly participate in
-                community education activities to share my knowledge and
-                experience with the community, while creating high awareness of
-                health issues and disease prevention for people. animal. My
-                mission is to bring peace and happiness to every family through
-                health care for their pets. With enthusiasm and extensive
-                knowledge, I am committed to continuing to contribute to the
-                development of the field of veterinary medicine and bring the
-                best care services to the community.
-              </span>
-            </p>
           </div>
-          <div className="about-image2" data-aos="fade-left">
-            <img
-              className="img-about"
-              src="https://static.wixstatic.com/media/84770f_e57bb42011fe4e91992f1ceeece2a7b3~mv2_d_4000_3947_s_4_2.jpg/v1/fill/w_526,h_519,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_e57bb42011fe4e91992f1ceeece2a7b3~mv2_d_4000_3947_s_4_2.jpg"
-              fetchpriority="high"
-            ></img>
-          </div>
+          <div className="testimonials-vet">
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"I would like to sincerely thank the organizers for awarding me the "Best Pet Sitter" award. This is a great honor and motivation for me to continue dedicating myself to providing the best care for our beloved pets. Thank you to all my clients for their trust and support!"</p>
+            </div>
+            <div className="profile">
+                <img src="https://img1.wsimg.com/isteam/ip/cb19dd35-86c8-43c8-b81a-0dbc3e39415a/balto.JPG/:/cr=t:6.72%25,l:17.54%25,w:64.94%25,h:64.94%25" alt="John Larson"/>
+                <div className="name">John Larson</div>
+                <div className="title">Best pet sitter</div>
+            </div>
+        </div>
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"I am deeply honored to receive the "Exquisite Pet Groomer Award." Thank you to the organizers for this recognition and to my wonderful clients and their pets for their trust and support. This award inspires me to continue my dedication to excellence in pet grooming. Thank you!"</p>
+            </div>
+            <div className="profile">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTECHP_N_70v9j85m3uYLYsoxJjxIsemqqcoA&s" alt="Saul Goodman"/>
+                <div className="name">Saul Goodman</div>
+                <div className="title">The Exquisite Pet Groomer Award</div>
+            </div>
+        </div>
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"I am deeply honored to receive the "Most Praised by Customers" award. Thank you to the organizers for this recognition and to my wonderful clients for their trust and support. This award inspires me to continue providing excellent service. Thank you!"</p>
+            </div>
+            <div className="profile">
+                <img src="https://www.petmart.vn/wp-content/uploads/2015/04/tram-cuu-ho-cho-meo.jpg" alt="Sara Wilsson"/>
+                <div className="name">Sara Wilsson</div>
+                <div className="title">The award received the most praise from customers</div>
+            </div>
+        </div>
+    </div>
         </div>
         <div className="font_2" data-aos="zoom-in-up">
           <h3>What Our Happy Clients Say</h3>
