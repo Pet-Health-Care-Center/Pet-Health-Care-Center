@@ -2,7 +2,7 @@ import { tokens } from "../../theme";
 import { getAllUsers } from "../account/getUserData";
 
 let updatedDataTeam = [];
-console.log(updatedDataTeam);
+// console.log(updatedDataTeam);
 
 export let mockDataTeam = [];
 export let mockPieData = [];
@@ -19,6 +19,42 @@ export let mockLineData = [
     })),
   },
 ];
+
+const fetchUsers = async () => {
+  try {
+    const userData = await getAllUsers();
+    updatedDataTeam.length = 0;
+
+    for (const userId in userData) {
+      if (userData.hasOwnProperty(userId)) {
+        const user = userData[userId];
+        const bookings = user.bookings || {};
+        updatedDataTeam.push({
+          id: userId,
+          ...user,
+          bookings: bookings,
+          refundMoney: user.refundMoney,
+        });
+      }
+    }
+    mockDataTeam = updatedDataTeam.slice();
+    mockTransactions = getMockTransactions();
+    getMockLineData();
+    mockWithdrawData = getMockWithdrawData();
+    mockPieData = getMockPieData();
+    mockBarData = getMockBarData();
+  } catch (error) {
+    console.error("Error fetching users: ", error);
+  } finally {
+    // console.log("Data fetching completed.");
+  }
+};
+
+fetchUsers();
+
+setInterval(fetchUsers, 15000);
+
+export { fetchUsers };
 
 const getMockTransactions = () => {
   let transactions = [];
@@ -54,6 +90,7 @@ const getMockTransactions = () => {
           status: booking.status,
           cost: booking.totalPaid || 0,
           feeOfCancellation: booking.feeOfCancellation,
+          cancellationDate: booking.cancellationDate || null,
         });
       } else {
         console.warn(
@@ -210,42 +247,3 @@ const getMockBarData = () => {
 
   return barData;
 };
-
-const fetchUsers = async () => {
-  try {
-    const userData = await getAllUsers();
-    console.log(userData);
-
-    updatedDataTeam.length = 0;
-
-    for (const userId in userData) {
-      if (userData.hasOwnProperty(userId)) {
-        const user = userData[userId];
-        const bookings = user.bookings || {};
-        updatedDataTeam.push({
-          id: userId,
-          ...user,
-          bookings: bookings,
-          refundMoney: user.refundMoney,
-        });
-      }
-    }
-
-    mockDataTeam = updatedDataTeam.slice();
-    mockTransactions = getMockTransactions();
-    getMockLineData();
-    mockWithdrawData = getMockWithdrawData();
-    mockPieData = getMockPieData();
-    mockBarData = getMockBarData();
-  } catch (error) {
-    console.error("Error fetching users: ", error);
-  } finally {
-    console.log("Data fetching completed.");
-  }
-};
-
-fetchUsers();
-
-setInterval(fetchUsers, 15000);
-
-export { fetchUsers };

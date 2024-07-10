@@ -1,8 +1,6 @@
 const { getDatabase, ref, push, update, get, set } = require('firebase/database');
-const { v4: uuidv4 } = require('uuid');
 
 const addBooking = async (req, res) => {
-
   const { userId, newBooking } = req.body;
 
   if (!userId || !newBooking) {
@@ -14,10 +12,14 @@ const addBooking = async (req, res) => {
     const db = getDatabase();
     const bookingRef = ref(db, `users/${userId}/bookings`);
     await push(bookingRef, newBooking);
-    res.status(200).json({ message: 'Booking added successfully' });
+    if (!res.headersSent) {
+      res.status(200).json({ message: 'Booking added successfully' });
+    }
   } catch (error) {
     console.error("Error adding booking to database:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 };
 
@@ -30,10 +32,14 @@ const updateAccountBalance = async (req, res) => {
   try {
     const userRef = ref(getDatabase(), `users/${userId}`);
     await update(userRef, { accountBalance: newBalance });
-    res.status(200).json({ message: 'Account balance updated successfully' });
+    if (!res.headersSent) {
+      res.status(200).json({ message: 'Account balance updated successfully' });
+    }
   } catch (error) {
     console.error("Error updating account balance:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 };
 
@@ -52,10 +58,15 @@ const updateVetSchedule = async (req, res) => {
     bookedSlots.push(slot);
     await set(ref(db, `users/${vetId}/schedule/${date}`), bookedSlots);
 
-    res.status(200).json({ message: 'Schedule updated successfully' });
+    if (!res.headersSent) {
+      res.status(200).json({ message: 'Schedule updated successfully' });
+    }
   } catch (error) {
     console.error("Error updating schedule:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 };
-module.exports = {addBooking, updateAccountBalance, updateVetSchedule}
+
+module.exports = { addBooking, updateAccountBalance, updateVetSchedule };

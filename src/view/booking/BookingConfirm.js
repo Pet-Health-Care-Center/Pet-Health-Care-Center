@@ -24,7 +24,6 @@ const BookingConfirm = () => {
   const userId = user.uid
   const [loading, setLoading] = useState(false);
 
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {

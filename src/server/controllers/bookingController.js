@@ -1,5 +1,6 @@
 // controllers/bookingsController.js
-const { getDatabase, ref, get } = require("firebase/database");
+const { getDatabase, ref, get, child } = require("firebase/database");
+const wsServer = require("../webSocketServer");
 
 // Function to convert status to number for sorting
 const statusToNumber = (status) => {
@@ -27,6 +28,7 @@ exports.getBookingsByUserId = async (req, res) => {
   try {
     const db = getDatabase();
     const bookingRef = ref(db, `users/${userId}/bookings`);
+
     const snapshot = await get(bookingRef);
     const data = snapshot.val();
 
@@ -36,10 +38,7 @@ exports.getBookingsByUserId = async (req, res) => {
       Object.keys(data).forEach((key) => {
         const booking = { ...data[key], key };
         if (
-          booking.status === "Paid" ||
-          booking.status === "Cancelled" ||
-          booking.status === "Rated" ||
-          booking.status === "Checked-in"
+          ["Paid", "Cancelled", "Rated", "Checked-in"].includes(booking.status)
         ) {
           paid.push(booking);
         } else if (booking.status === "Pending Payment") {
@@ -48,8 +47,7 @@ exports.getBookingsByUserId = async (req, res) => {
       });
 
       const compareBookings = (a, b) => {
-        const statusDifference =
-          statusToNumber(a.status) - statusToNumber(b.status);
+        const statusDifference = statusToNumber(a.status) - statusToNumber(b.status);
         if (statusDifference !== 0) return statusDifference;
 
         const dateA = new Date(`${a.date} ${a.time}`);
@@ -72,31 +70,51 @@ exports.getBookingsByUserId = async (req, res) => {
 
 exports.getBookingDetails = async (req, res) => {
   const { userId, bookingId } = req.params;
-  const db = getDatabase();
+  const db = getDatabase()
 
   try {
-    const bookingSnapshot = await get(
-      ref(db, `users/${userId}/bookings/${bookingId}`)
-    );
-    const medicalRecordSnapshot = await get(
-      ref(db, `users/${userId}/bookings/${bookingId}/medicalRecord`)
-    );
+    const bookingRef = ref(db, `users/${userId}/bookings/${bookingId}`);
+    const medicalRecordRef = ref(db, `users/${userId}/bookings/${bookingId}/medicalRecord`);
+    const cageHistoryRef = ref(db, `users/${userId}/bookings/${bookingId}/cageHistory`);
+
+    const bookingSnapshot = await get(bookingRef);
+    const medicalRecordSnapshot = await get(medicalRecordRef);
+    const cageHistorySnapshot = await get(cageHistoryRef);
 
     if (!bookingSnapshot.exists()) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({ error: 'Booking not found' });
     }
 
     const bookingData = bookingSnapshot.val();
-    const medicalRecordData = medicalRecordSnapshot.exists()
-      ? medicalRecordSnapshot.val()
-      : null;
+    const medicalRecordData = medicalRecordSnapshot.val() ?? null;
+    const cageHistoryData = cageHistorySnapshot.val() ?? null;
 
-    return res
-      .status(200)
-      .json({ booking: bookingData, medicalRecord: medicalRecordData });
+    // Broadcast the updated booking details to all WebSocket clients
+    const wss = req.app.get('wss');
+    if (wss) {
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'bookingUpdated',
+            data: {
+              bookingId,
+              bookingData,
+              medicalRecordData,
+              cageHistoryData
+            }
+          }));
+        }
+      });
+    }
+
+    return res.status(200).json({
+      booking: bookingData,
+      medicalRecord: medicalRecordData,
+      cageHistory: cageHistoryData
+    });
   } catch (error) {
-    console.error("Error fetching booking details:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error('Error fetching booking details:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -104,6 +122,7 @@ exports.getServices = async (req, res) => {
   try {
     const db = getDatabase();
     const servicesRef = ref(db, 'services');
+
     const snapshot = await get(servicesRef);
     const services = snapshot.val();
 
@@ -121,6 +140,7 @@ exports.getServices = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 exports.fetchAllBookingsUser = async (req, res) => {
   const { userId } = req.params;
 
@@ -131,9 +151,9 @@ exports.fetchAllBookingsUser = async (req, res) => {
   try {
     const db = getDatabase();
     const bookingRef = ref(db, `users/${userId}/bookings`);
+
     const snapshot = await get(bookingRef);
     const data = snapshot.val();
-
     res.status(200).json(data);
   } catch (error) {
     console.error("Error fetching data: ", error);

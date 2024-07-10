@@ -1,7 +1,7 @@
 const { getDatabase, ref, get, update, set, runTransaction } = require('firebase/database');
 
 const cancelBooking = async (req, res) => {
-  const { bookingKey, userId, vetId, date, time, totalPaid } = req.body;
+  const { bookingKey, userId, vetId, date, time, totalPaid, cancellationDate } = req.body;
 
   try {
     const db = getDatabase();
@@ -13,6 +13,7 @@ const cancelBooking = async (req, res) => {
     await runTransaction(bookingRef, (currentBooking) => {
       if (currentBooking) {
         currentBooking.status = "Cancelled";
+        currentBooking.cancellationDate = cancellationDate;
         currentBooking.feeOfCancellation = totalPaid * 0.25;
       }
       return currentBooking;

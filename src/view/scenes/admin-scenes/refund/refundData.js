@@ -1,24 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, Typography, useTheme,  Button, Modal } from "@mui/material";
+import { Box, Typography, useTheme, Button, Modal } from "@mui/material";
 import { tokens } from "../../../../theme";
 import {
   mockTransactions,
   mockWithdrawData as initialMockWithdrawData,
 } from "../../../data/mockData";
-import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import TrafficIcon from "@mui/icons-material/Traffic";
 import Header from "../../../../Components/dashboardChart/Header";
-import LineChart from "../../../../Components/dashboardChart/LineChart";
-import BarChart from "../../../../Components/dashboardChart/BarChart";
 import StatBox from "../../../../Components/dashboardChart/StatBox";
-import PieChart from "../../../../Components/dashboardChart/PieChart";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import { getDatabase, ref, onValue, get, update } from "firebase/database";
-import emailjs from 'emailjs-com';
-import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  getRefundMoneyByUserId,
+  updateRefundMoneyByUserId,
+} from "../../../account/getUserData";
 
 const RefundData = () => {
   const theme = useTheme();
@@ -30,35 +27,47 @@ const RefundData = () => {
   const cancelledRef = useRef(null);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrUrl, setQrUrl] = useState("");
-  const [mockWithdrawData, setMockWithdrawData] = useState(initialMockWithdrawData);
+  const [mockWithdrawData, setMockWithdrawData] = useState(
+    initialMockWithdrawData
+  );
 
   useEffect(() => {
     const calculateTotals = () => {
+      const currentDate = new Date();
+      // console.log(`Current Date: ${currentDate.toDateString()}`);
+
       const totalFeeSum = mockTransactions
         .filter((transaction) => transaction.status === "Cancelled")
         .reduce(
-          (sum, transaction) => sum + (transaction.feeOfCancellation || 0),
+          (sum, transaction) =>
+            sum + parseFloat(transaction.feeOfCancellation || 0),
           0
         );
 
       const totalWithdrawnSum = mockWithdrawData
-        .filter((request) => request.status === "Processed")
-        .reduce((sum, request) => sum + request.amount, 0);
+        .filter((request) => request.isRefund === true)
+        .reduce((sum, request) => sum + parseFloat(request.amount), 0);
 
       const totalFeeTodaySum = mockTransactions
         .filter((transaction) => {
-          const [day, month, year] = transaction.date.split("-");
-          const transactionDate = new Date(year, parseInt(month) - 1, day);
-          const currentDate = new Date();
-          return (
+          // console.log(transaction.cancellationDate);
+
+          // console.log(currentDate.toDateString());
+          const isCancelledToday =
             transaction.status === "Cancelled" &&
-            transactionDate.toDateString() === currentDate.toDateString()
-          );
+            transaction.cancellationDate === currentDate.toDateString();
+
+          return isCancelledToday;
         })
         .reduce(
-          (sum, transaction) => sum + (transaction.feeOfCancellation || 0),
+          (sum, transaction) =>
+            sum + parseFloat(transaction.feeOfCancellation || 0),
           0
         );
+
+      // console.log(`Total Fee: ${totalFeeSum}`);
+      // console.log(`Total Withdrawn: ${totalWithdrawnSum}`);
+      // console.log(`Total Fee Today: ${totalFeeTodaySum}`);
 
       setTotalFee(totalFeeSum);
       setTotalWithdrawn(totalWithdrawnSum);
@@ -66,7 +75,10 @@ const RefundData = () => {
     };
 
     calculateTotals();
-  }, [mockTransactions, mockWithdrawData]);
+    const interval = setInterval(calculateTotals, 30000); // Recalculate every minute
+
+    return () => clearInterval(interval);
+  }); // Dependencies for useEffect
 
   useEffect(() => {
     const sortedData = [...mockWithdrawData].sort((a, b) => {
@@ -77,120 +89,118 @@ const RefundData = () => {
     });
 
     setMockWithdrawData(sortedData);
-  }, []);
+  }, [mockWithdrawData]);
 
   const handleGenerateQr = (request) => {
-    const qrUrl = `https://img.vietqr.io/image/${request.bank}-${request.accountNumber}-print.png?amount=${request.amount * 1000}&addInfo=${request.username}`;
+    const qrUrl = `https://img.vietqr.io/image/${request.bank}-${
+      request.accountNumber
+    }-print.png?amount=${request.amount * 1000}&addInfo=${request.username}`;
 
     setQrUrl(qrUrl);
     setQrModalOpen(true);
-    console.log(request);
+    // console.log(request);
   };
 
   const formatDateToVN = (date) => {
     const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     };
-    const formattedDate = new Date(date).toLocaleString('vi-VN', options);
-    console.log('Formatted date:', formattedDate); // Debugging
+    const formattedDate = new Date(date).toLocaleString("vi-VN", options);
+    // console.log('Formatted date:', formattedDate); // Debugging
 
     const datePartMatch = formattedDate.match(/(\d{2}\/\d{2}\/\d{4})/);
     const timePartMatch = formattedDate.match(/(\d{2}:\d{2}:\d{2})/);
-    
+
     if (!datePartMatch || !timePartMatch) {
-        console.error('Date or time part is undefined');
-        return null;
+      console.error("Date or time part is undefined");
+      return null;
     }
 
     const datePart = datePartMatch[0];
     const timePart = timePartMatch[0];
 
-    console.log('Date part:', datePart); // Debugging
-    console.log('Time part:', timePart); // Debugging
+    // console.log('Date part:', datePart); // Debugging
+    // console.log('Time part:', timePart); // Debugging
 
-    const [day, month, year] = datePart.split('/');
-    console.log('Day:', day, 'Month:', month, 'Year:', year); // Debugging
+    const [day, month, year] = datePart.split("/");
+    // console.log('Day:', day, 'Month:', month, 'Year:', year); // Debugging
 
     if (!day || !month || !year) {
-        console.error('Day, month, or year is undefined');
-        return null;
+      console.error("Day, month, or year is undefined");
+      return null;
     }
 
     return `${timePart} ${day}/${month}/${year}`;
-};
+  };
 
-const handleRefunded = async (request) => {
-    const db = getDatabase();
-    const refundMoneyRef = ref(db, `users/${request.userId}/refundMoney`);
+  const handleRefunded = async (request) => {
+    const refundData = await getRefundMoneyByUserId(request.userId);
+    if (refundData) {
+      let refundKey = null;
 
-    const snapshot = await get(refundMoneyRef);
-    if (snapshot.exists()) {
-        const refundMoney = snapshot.val();
-        let refundKey = null;
+      const formattedRequestDate = formatDateToVN(request.date);
 
-        const formattedRequestDate = formatDateToVN(request.date);
-
-        for (const key in refundMoney) {
-            const formattedRefundDate = formatDateToVN(refundMoney[key].date);
-            if (formattedRefundDate === formattedRequestDate) {
-                refundKey = key;
-                break;
-            }
+      for (const key in refundData) {
+        const formattedRefundDate = formatDateToVN(refundData[key].date);
+        if (formattedRefundDate === formattedRequestDate) {
+          refundKey = key;
+          break;
         }
+      }
 
-        if (refundKey) {
-            const specificRefundRef = ref(
-                db,
-                `users/${request.userId}/refundMoney/${refundKey}`
-            );
-            const now = new Date();
-            const refundDay = formatDateToVN(now);
+      if (refundKey) {
+        const now = new Date();
+        const refundDay = formatDateToVN(now);
 
-            await update(specificRefundRef, { isRefund: false, refundDay });
+        // await update(specificRefundRef, { isRefund: true, refundDay });
+        await updateRefundMoneyByUserId(request.userId, refundKey, {
+          isRefund: true,
+          refundDay,
+        });
+        const updatedWithdrawData = mockWithdrawData.map((r) =>
+          formatDateToVN(r.date) === formattedRequestDate && !r.isRefund
+            ? { ...r, isRefund: true, refundDay }
+            : r
+        );
 
-            const updatedWithdrawData = mockWithdrawData.map((r) =>
-                formatDateToVN(r.date) === formattedRequestDate && !r.isRefund ? { ...r, isRefund: false, refundDay } : r
-            );
+        updatedWithdrawData.sort((a, b) => {
+          if (a.isRefund === b.isRefund) {
+            return 0;
+          }
+          return a.isRefund ? 1 : -1;
+        });
 
-            updatedWithdrawData.sort((a, b) => {
-                if (a.isRefund === b.isRefund) {
-                    return 0;
-                }
-                return a.isRefund ? 1 : -1;
-            });
+        setMockWithdrawData(updatedWithdrawData);
 
-            setMockWithdrawData(updatedWithdrawData);
-
-            try {
-                const response = await axios.post('http://localhost:5000/send-email', {
-                    user_email: request.mail,
-                    user_name: request.username,
-                    amount: request.amount,
-                    request_date: formattedRequestDate,
-                    refund_date: refundDay
-                });
-                toast.success('Email sent successfully');
-            } catch (error) {
-                console.error('Error sending email', error);
-            }
-        } else {
-            console.error("Refund entry not found.");
+        try {
+          await axios.post("http://localhost:5000/send-email", {
+            user_email: request.mail,
+            user_name: request.username,
+            amount: request.amount,
+            request_date: formattedRequestDate,
+            refund_date: refundDay,
+          });
+          toast.success("Email sent successfully");
+        } catch (error) {
+          console.error("Error sending email", error);
         }
+      } else {
+        console.error("Refund entry not found.");
+      }
     } else {
-        console.error("No refund money data found.");
+      console.error("No refund money data found.");
     }
-};
+  };
 
   const handleCloseModal = () => {
     setQrModalOpen(false);
     setQrUrl("");
   };
-
 
   return (
     <Box m="20px">
@@ -233,12 +243,12 @@ const handleRefunded = async (request) => {
           justifyContent="center"
         >
           <StatBox
-            title={`${(totalWithdrawn * 1000).toLocaleString("en-US", {
+            title={`${(totalFee * 1000).toLocaleString("en-US", {
               maximumFractionDigits: 0,
             })} VND`}
-            subtitle="Total withdrawn"
+            subtitle="Total of Fee"
             progress="null"
-            icon={<CurrencyExchangeIcon />}
+            icon={<AttachMoneyIcon />}
           />
         </Box>
 
@@ -250,12 +260,12 @@ const handleRefunded = async (request) => {
           justifyContent="center"
         >
           <StatBox
-            title={`${(totalFee * 1000).toLocaleString("en-US", {
+            title={`${(totalWithdrawn * 1000).toLocaleString("en-US", {
               maximumFractionDigits: 0,
             })} VND`}
-            subtitle="Total of Fee"
+            subtitle="Total withdrawn"
             progress="null"
-            icon={<AttachMoneyIcon />}
+            icon={<CurrencyExchangeIcon />}
           />
         </Box>
 
@@ -312,13 +322,13 @@ const handleRefunded = async (request) => {
               <Box flex="1" textAlign="center">
                 <Typography
                   color={
-                    request.status === "Processed"
-                      ? colors.redAccent[500]
-                      : colors.greenAccent[500]
+                    request.isRefund === true
+                      ? colors.greenAccent[500]
+                      : colors.blueAccent[500]
                   }
                   fontSize={"2rem"}
                 >
-                 {request.isRefund ? "Refunded" : request.status === "Processed" ? "Processed" : "Pending"}
+                  {request.isRefund === true ? "Refunded" : "Pending"}
                 </Typography>
               </Box>
               <Box
@@ -334,8 +344,7 @@ const handleRefunded = async (request) => {
                     })} VND`
                   : "0 VND"}
               </Box>
-              <Box
-               flex="1">
+              <Box flex="1">
                 <Button
                   variant="contained"
                   color="secondary"
@@ -369,7 +378,7 @@ const handleRefunded = async (request) => {
         >
           <Box
             display="flex"
-            justifyContent="space-between"
+            justifyContent="space-around"
             alignItems="center"
             borderBottom={`4px solid ${colors.primary[500]}`}
             colors={colors.grey[100]}
@@ -379,11 +388,20 @@ const handleRefunded = async (request) => {
             backgroundColor={colors.primary[400]}
           >
             <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
-              Recent Refunded
+              Booking Info
+            </Typography>
+            <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
+              Cancelled Date
+            </Typography>
+            <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
+              Status
+            </Typography>
+            <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
+              Fee
             </Typography>
           </Box>
           {mockTransactions
-            .filter((transaction) => transaction.status == "Cancelled")
+            .filter((transaction) => transaction.status === "Cancelled")
             .map((transaction, i) => (
               <Box
                 key={`${transaction.bookingId}-${i}`}
@@ -393,7 +411,7 @@ const handleRefunded = async (request) => {
                 borderBottom={`4px solid ${colors.primary[500]}`}
                 p="15px"
               >
-                <Box flex="1">
+                <Box flex="1.2">
                   <Typography
                     color={colors.greenAccent[500]}
                     variant="h5"
@@ -408,25 +426,25 @@ const handleRefunded = async (request) => {
                 </Box>
                 <Box flex="1" textAlign="center">
                   <Typography color={colors.grey[100]} fontSize={"2rem"}>
-                    {transaction.time + " " + transaction.date}
+                    {transaction.cancellationDate}
                   </Typography>
                 </Box>
                 <Box flex="1" textAlign="center">
                   <Typography
                     color={
                       transaction.status === "Cancelled"
-                        ? colors.blueAccent[500]
+                        ? colors.redAccent[500]
                         : colors.greenAccent[500]
                     }
                     fontSize={"2rem"}
                   >
                     {transaction.status === "Cancelled"
-                      ? "Fee"
+                      ? "Charged"
                       : transaction.status}
                   </Typography>
                 </Box>
                 <Box
-                  flex=".5"
+                  flex=".6"
                   textAlign="center"
                   backgroundColor={colors.greenAccent[500]}
                   p="5px 5px"
@@ -453,7 +471,7 @@ const handleRefunded = async (request) => {
         >
           <Box
             display="flex"
-            justifyContent="space-between"
+            justifyContent="space-around"
             alignItems="center"
             borderBottom={`4px solid ${colors.primary[500]}`}
             colors={colors.grey[100]}
@@ -462,12 +480,41 @@ const handleRefunded = async (request) => {
             top="0"
             backgroundColor={colors.primary[400]}
           >
-            <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
-              Recent Cancelled
+            <Typography
+              color={colors.grey[100]}
+              variant="h5"
+              fontWeight="600"
+              marginLeft="40px"
+            >
+              Booking Info
+            </Typography>
+            <Typography
+              color={colors.grey[100]}
+              variant="h5"
+              fontWeight="600"
+              marginLeft="55px"
+            >
+              Booked For Date
+            </Typography>
+            <Typography
+              color={colors.grey[100]}
+              variant="h5"
+              fontWeight="600"
+              marginLeft="30px"
+            >
+              Cancelled Date
+            </Typography>
+            <Typography
+              color={colors.grey[100]}
+              variant="h5"
+              fontWeight="600"
+              marginLeft="20px"
+            >
+              Amount Paid
             </Typography>
           </Box>
           {mockTransactions
-            .filter((transaction) => transaction.status == "Cancelled")
+            .filter((transaction) => transaction.status === "Cancelled")
             .map((transaction, i) => (
               <Box
                 key={`${transaction.bookingId}-${i}`}
@@ -477,7 +524,7 @@ const handleRefunded = async (request) => {
                 borderBottom={`4px solid ${colors.primary[500]}`}
                 p="15px"
               >
-                <Box flex="1">
+                <Box flex="1.2">
                   <Typography
                     color={colors.greenAccent[500]}
                     variant="h5"
@@ -497,18 +544,18 @@ const handleRefunded = async (request) => {
                 </Box>
                 <Box flex="1" textAlign="center">
                   <Typography
-                    color={
-                      transaction.status === "Cancelled"
-                        ? colors.redAccent[500]
-                        : colors.greenAccent[500]
-                    }
+                    // color={
+                    //   transaction.status === "Cancelled"
+                    //     ? colors.redAccent[500]
+                    //     : colors.greenAccent[500]
+                    // }
                     fontSize={"2rem"}
                   >
-                    {transaction.status}
+                    {transaction.cancellationDate}
                   </Typography>
                 </Box>
                 <Box
-                  flex=".5"
+                  flex=".6"
                   textAlign="center"
                   backgroundColor={colors.greenAccent[500]}
                   p="5px 5px"
@@ -544,7 +591,7 @@ const handleRefunded = async (request) => {
             <Typography variant="h5" marginBottom="20px">
               QR Code
             </Typography>
-            <img className="img-qr-code" src={qrUrl} alt="QR Code"/>
+            <img className="img-qr-code" src={qrUrl} alt="QR Code" />
             <Button
               variant="contained"
               color="primary"
@@ -556,7 +603,7 @@ const handleRefunded = async (request) => {
           </Box>
         </Box>
       </Modal>
-      <ToastContainer/>
+      <ToastContainer />
     </Box>
   );
 };

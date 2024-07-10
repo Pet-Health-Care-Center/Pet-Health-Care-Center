@@ -77,6 +77,7 @@ const Booking = () => {
     setSelectedCageKey(cageKey);
     setIsModalOpen(true);
     setSelectedBookingId(bookingId);
+    console.log(bookingId)
   };
 
   const handleCloseModal = () => {
@@ -90,7 +91,7 @@ const Booking = () => {
     const db = getDatabase();
     const cageRef = ref(db, `cages/${selectedCageKey}`);
     const currentDate = new Date();
-    currentDate.setDate(currentDate.getDate() + 1);
+    currentDate.setDate(currentDate.getDate() + 2);
     const formattedDate = currentDate.toLocaleDateString();
 
     try {
@@ -225,7 +226,23 @@ const Booking = () => {
           .filter((pet) => pet.inCage)
           .map((pet) => (
             <div key={pet.petId} style={{ fontSize: "16px" }}>
-              {pet.petId}
+              {pet.petName}
+            </div>
+          )),
+    },
+    {
+      field: "petOwner",
+      headerName: (
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Pet Owner</Typography>
+      ),
+      flex: 1.3,
+      editable: false,
+      renderCell: ({ value }) =>
+        (value || [])
+          .filter((pet) => pet.inCage)
+          .map((pet) => (
+            <div key={pet.petId} style={{ fontSize: "16px" }}>
+              {pet.petOwner}
             </div>
           )),
     },

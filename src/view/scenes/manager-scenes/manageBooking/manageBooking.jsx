@@ -10,21 +10,20 @@ import {
   Button,
   IconButton,
   Pagination,
+  createTheme,
+  ThemeProvider,
 } from "@mui/material";
-import { tokens } from "../../../../theme";
+import { tokens, darkTheme  } from "../../../../theme";
 import Header from "../../../../Components/dashboardChart/Header";
 import "react-datepicker/dist/react-datepicker.css";
 import Alert from "@mui/material/Alert";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-// import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
-// import DatePicker from 'react-date-picker';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import 'react-date-picker/dist/DatePicker.css';
-import { toast } from "react-toastify";
+import axios from 'axios';
+
 
 const ManageBooking = () => {
   const theme = useTheme();
@@ -53,17 +52,19 @@ const ManageBooking = () => {
             const booking = userData.bookings[bookingId];
             if (booking.status === "Paid") {
               const services = booking.services.join(", ");
-              console.log(services);
               allBookings.push({
                 id: bookingId,
                 userId,
                 username: userData.username,
+                email: userData.email,
                 petName: booking.pet.name,
                 vetName: booking.vet.name,
                 services: services,
                 date: dayjs(booking.date).format("DD/MM/YYYY"),
                 time: booking.time,
                 status: booking.status,
+                accountBalance: userData.accountBalance,
+                totalPaid: booking.totalPaid,
                 ...booking,
               });
             }
@@ -78,7 +79,6 @@ const ManageBooking = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       const allBookings = await fetchAllBookings();
-      console.log("Fetched Bookings:", allBookings);
       setBookings(allBookings);
       setLoading(false);
     };
@@ -96,9 +96,6 @@ const ManageBooking = () => {
       ? dayjs(booking.date).format("DD-MM-YYYY") ===
         dayjs(selectedDate).format("DD-MM-YYYY")
       : true;
-    console.log(matchesSelectedDate);
-    console.log(selectedDate);
-    console.log(booking.date);
     return matchesSearchQuery && matchesSelectedDate;
   });
 
@@ -117,26 +114,44 @@ const ManageBooking = () => {
 
   const handleCancelBooking = async (row) => {
     setLoading(true);
-
+  
     try {
-      await update(
-        ref(getDatabase(), `users/${row.userId}/bookings/${row.id}`),
-        {
-          status: "Cancelled",
-        }
-      );
-
-      setBookings(
-        bookings.map((item) =>
-          item.id === row.id ? { ...item, status: "Cancelled" } : item
-        )
+      const db = getDatabase();
+  
+      // Update booking status in Firebase
+      await update(ref(db, `users/${row.userId}/bookings/${row.id}`), {
+        status: "Cancelled",
+      });
+      await update(ref(db, `users/${row.userId}`), {
+        accountBalance: row.accountBalance + row.totalPaid
+      })
+  
+      // Send cancellation email
+      try {
+        const response = await axios.post("http://localhost:5000/send-cancellation-email", {
+          user_email: row.email,
+          user_name: row.username,
+          booking_id: row.bookingId,
+          cancel_date: new Date().toLocaleDateString(), // Use appropriate date format
+        });
+  
+        console.log(response.data); // Log the success message
+      } catch (emailError) {
+        console.error("Error sending cancellation email:", emailError.message);
+      }
+  
+      // Update local bookings state
+      setBookings((bookings) =>
+        bookings.map((item) => (item.id === row.id ? { ...item, status: "Cancelled" } : item))
       );
     } catch (error) {
-      console.error("Error canceling booking:", error);
+      console.error("Error cancelling booking:", error.message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
+  
+  
 
   const handleCheckinBooking = async (row) => {
     setLoading(true);
@@ -312,9 +327,6 @@ const ManageBooking = () => {
   const handleClear = () => {
     setSelectedDate(null);
     setCleared(true);
-    toast.success("Clear date successful! ", {
-      autoClose: 2000
-    })
   };
 
   return (
@@ -336,41 +348,52 @@ const ManageBooking = () => {
           <SearchIcon sx={{ fontSize: "20px" }} />
         </IconButton>
       </Box>
+      <ThemeProvider theme={darkTheme}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box
-      sx={{
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "relative",
-        fontSize: "16px",
-      }}
-    >
-      <DatePicker
-        selected={selectedDate}
-        onChange={handleDateChange}
-        customInput={
-          <TextField
-            variant="outlined"
-            value={selectedDate ? selectedDate.toLocaleDateString() : ''}
-            InputProps={{
-              style: { fontSize: "20px" },
-            }}
-            sx={{ width: 260, marginBottom: "10px" }}
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            justifyContent: "center",
+            position: "relative",
+          }}
+        >
+          <DatePicker
+            value={selectedDate}
+            onChange={handleDateChange}
+            inputFormat="DD/MM/YYYY" // Định dạng hiển thị ngày
+            clearable
+            onClear={handleClear}
+            sx={{ width: 320 }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                InputProps={{
+                  style: { fontSize: "16px", color: "#ffffff" }, // Tùy chỉnh kích thước font và màu chữ cho input
+                }}
+                sx={{
+                  "& .MuiInputBase-root": {
+                    backgroundColor: "#424242", // Nền tối cho input
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "24px", // Tùy chỉnh kích thước font cho input
+                  },
+                }}
+              />
+            )}
           />
-        }
-      />
-      <Button
-        variant="contained"
-        onClick={handleClear}
-        sx={{ marginTop: "10px" }}
-      >
-        Clear
-      </Button>
-    </Box>
+          {cleared && (
+            <Alert
+              sx={{ position: "absolute", bottom: 0, right: 0 }}
+              severity="success"
+            >
+              Field cleared!
+            </Alert>
+          )}
+        </Box>
       </LocalizationProvider>
+    </ThemeProvider>
 
       <Box
         m="40px 0 0 0"

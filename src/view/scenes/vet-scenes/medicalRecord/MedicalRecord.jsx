@@ -175,6 +175,8 @@ const MedicalRecord = () => {
           petId: booking.pet.key,
           inCage: true,
           bookingId: booking.bookingId,
+          petName: booking.pet.name,
+          petOwner: user?.username
         };
 
         await saveMedicalRecord(userId, bookingId, {
@@ -363,7 +365,6 @@ const MedicalRecord = () => {
   return (
     <Box sx={styles.container}>
       {loading && <LoadingAnimation />}
-      <div ref={elementRef}>Width of this element is: {width}px</div>
       <Typography variant="h2" gutterBottom sx={styles.header}>
         Medical Record
       </Typography>

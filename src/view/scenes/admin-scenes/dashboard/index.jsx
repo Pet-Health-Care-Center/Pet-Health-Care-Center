@@ -102,7 +102,7 @@ const Dashboard = () => {
   useEffect(() => {
     const updateRevenue = () => {
       const currentDate = getCurrentDate();
-      console.log(isCustomDateSelected);
+      // console.log(isCustomDateSelected);
       if (isCustomDateSelected && selectedDate !== currentDate) {
         const totalPaidForSelectedDate = getTotalPaid(selectedDate, "date");
         setDailyRevenue(totalPaidForSelectedDate.toLocaleString() + ",000");
@@ -176,7 +176,7 @@ const Dashboard = () => {
 
     updateRevenue();
 
-    const intervalId = setInterval(updateRevenue, 15000);
+    const intervalId = setInterval(updateRevenue, 1000);
 
     return () => clearInterval(intervalId);
   }, [isCustomDateSelected, selectedDate]);

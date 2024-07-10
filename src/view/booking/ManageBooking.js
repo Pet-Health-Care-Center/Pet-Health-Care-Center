@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { getDatabase, ref, onValue, update, get, set } from "firebase/database";
 import { auth } from "../../Components/firebase/firebase";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,8 +7,7 @@ import { Pagination } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import useForceUpdate from "../../hooks/useForceUpdate";
 import "./ManageBookings.css";
-import axios from 'axios';
-import { fetchBookings, cancelBooking } from './fetchBooking'; 
+import { fetchBookings, cancelBooking } from "./fetchBooking";
 import moment from "moment";
 import LoadingAnimation from "../../animation/loading-animation";
 
@@ -53,9 +51,7 @@ const ManageBookings = () => {
   const navigate = useNavigate();
   const classes = useStyles();
   const forceUpdate = useForceUpdate();
-  const [currentTab, setCurrentTab] = useState('Paid');
-
-
+  const [currentTab, setCurrentTab] = useState("Paid");
 
   useEffect(() => {
     if (!user) {
@@ -88,21 +84,25 @@ const ManageBookings = () => {
 
   const confirmCancellation = async () => {
     if (confirmCancel) {
+      const currentDate = new Date();
+      const cancellationDate = currentDate.toDateString();
+      console.log(cancellationDate);
       try {
         setLoading(true);
         const { key, vet, date, time, totalPaid } = confirmCancel;
         const userId = user.uid;
         const vetId = vet.uid;
-  
+
         await cancelBooking({
           bookingKey: key,
           userId,
           vetId,
           date,
           time,
-          totalPaid
+          totalPaid,
+          cancellationDate,
         });
-  
+
         setPaidBookings((prev) =>
           prev.map((booking) =>
             booking.key === confirmCancel.key
@@ -110,41 +110,48 @@ const ManageBookings = () => {
               : booking
           )
         );
-  
-        toast.success("Cancelled successfully! Please check your booking section.", {
-          autoClose: 2000,
-          onClose: () => {
-            setLoading(false); // Stop the loading state when toast closes
-            forceUpdate();
-          },
-        });
-  
+
+        toast.success(
+          "Cancelled successfully! Please check your booking section.",
+          {
+            autoClose: 2000,
+            onClose: () => {
+              setLoading(false); // Stop the loading state when toast closes
+              forceUpdate();
+            },
+          }
+        );
+
         setConfirmCancel(null);
       } catch (error) {
         console.error("Error cancelling booking:", error);
-        toast.error(`An error occurred while processing the cancellation. Details: ${error.message}`);
+        toast.error(
+          `An error occurred while processing the cancellation. Details: ${error.message}`
+        );
         setLoading(false); // Stop the loading state in case of error
       }
     }
   };
-  
 
   const closeModal = () => {
     setConfirmCancel(null);
   };
   const getCurrentBookings = () => {
     let allBookings = [...paidBookings, ...unpaidBookings];
+        allBookings.sort((a, b) => new Date(b.date) - new Date(a.date));
     switch (currentTab) {
-      case 'Paid':
-        return allBookings.filter((booking) => booking.status === 'Paid');
-      case 'Checked-in':
-        return allBookings.filter((booking) => booking.status === 'Checked-in');
-      case 'Rated':
-        return allBookings.filter((booking) => booking.status === 'Rated');
-      case 'Cancelled':
-        return allBookings.filter((booking) => booking.status === 'Cancelled');
-      case 'Pending Payment':
-        return allBookings.filter((booking) => booking.status === 'Pending Payment');
+      case "Paid":
+        return allBookings.filter((booking) => booking.status === "Paid");
+      case "Checked-in":
+        return allBookings.filter((booking) => booking.status === "Checked-in");
+      case "Rated":
+        return allBookings.filter((booking) => booking.status === "Rated");
+      case "Cancelled":
+        return allBookings.filter((booking) => booking.status === "Cancelled");
+      case "Pending Payment":
+        return allBookings.filter(
+          (booking) => booking.status === "Pending Payment"
+        );
       default:
         return allBookings;
     }
@@ -153,13 +160,14 @@ const ManageBookings = () => {
   const indexOfLastBooking = currentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
 
-  const currentBookings = getCurrentBookings().slice(indexOfFirstBooking, indexOfLastBooking);
+  const currentBookings = getCurrentBookings().slice(
+    indexOfFirstBooking,
+    indexOfLastBooking
+  );
 
   const handlePageChange = (event, value) => {
     setCurrentPage(value);
   };
-
-
 
   useEffect(() => {
     const applyStyles = () => {
@@ -172,57 +180,61 @@ const ManageBookings = () => {
 
   const getStatusClassName = (status) => {
     switch (status) {
-      case 'Paid':
-        return 'status-paid';
-      case 'Pending Payment':
-        return 'status-pending';
-      case 'Checked-in':
-        return 'status-checkedin';
-      case 'Cancelled':
-        return 'status-cancelled';
-      case 'Rated':
-        return 'status-rated';
+      case "Paid":
+        return "status-paid";
+      case "Pending Payment":
+        return "status-pending";
+      case "Checked-in":
+        return "status-checkedin";
+      case "Cancelled":
+        return "status-cancelled";
+      case "Rated":
+        return "status-rated";
       default:
-        return '';
+        return "";
     }
   };
   const handleTabChange = (status) => {
     setCurrentTab(status);
     setCurrentPage(1); // Reset to the first page when changing tabs
   };
-  
+
   return (
     <div className="manage-bookings-page">
-          {loading && <LoadingAnimation />}
+      {loading && <LoadingAnimation />}
       <h2 className="manage-bookings-title">Manage Bookings</h2>
       <div className="tabs">
         <button
-          className={`tab-button ${currentTab === 'Paid' ? 'active' : ''}`}
-          onClick={() => handleTabChange('Paid')}
+          className={`tab-button ${currentTab === "Paid" ? "active" : ""}`}
+          onClick={() => handleTabChange("Paid")}
         >
           Paid
         </button>
         <button
-          className={`tab-button ${currentTab === 'Checked-in' ? 'active' : ''}`}
-          onClick={() => handleTabChange('Checked-in')}
+          className={`tab-button ${
+            currentTab === "Checked-in" ? "active" : ""
+          }`}
+          onClick={() => handleTabChange("Checked-in")}
         >
           Checked-in
         </button>
         <button
-          className={`tab-button ${currentTab === 'Rated' ? 'active' : ''}`}
-          onClick={() => handleTabChange('Rated')}
+          className={`tab-button ${currentTab === "Rated" ? "active" : ""}`}
+          onClick={() => handleTabChange("Rated")}
         >
           Rated
         </button>
         <button
-          className={`tab-button ${currentTab === 'Cancelled' ? 'active' : ''}`}
-          onClick={() => handleTabChange('Cancelled')}
+          className={`tab-button ${currentTab === "Cancelled" ? "active" : ""}`}
+          onClick={() => handleTabChange("Cancelled")}
         >
           Cancelled
         </button>
         <button
-          className={`tab-button ${currentTab === 'Pending Payment' ? 'active' : ''}`}
-          onClick={() => handleTabChange('Pending Payment')}
+          className={`tab-button ${
+            currentTab === "Pending Payment" ? "active" : ""
+          }`}
+          onClick={() => handleTabChange("Pending Payment")}
         >
           Pending
         </button>
@@ -250,22 +262,35 @@ const ManageBookings = () => {
                   currentBookings.map((booking, index) => (
                     <tr
                       key={booking.key}
-                      className={booking.status === 'Cancelled' ? 'cancelled-booking' : ''}
+                      className={
+                        booking.status === "Cancelled"
+                          ? "cancelled-booking"
+                          : ""
+                      }
                       style={{
-                        textDecoration: booking.status === 'Cancelled' ? 'line-through' : 'none',
+                        textDecoration:
+                          booking.status === "Cancelled"
+                            ? "line-through"
+                            : "none",
                       }}
                     >
                       <td>{indexOfFirstBooking + index + 1}</td>
                       <td>{booking.bookingId}</td>
                       <td>{moment(booking.date).format("DD/MM/YYYY")}</td>
                       <td>{booking.time}</td>
-                      <td className={`status-cell ${getStatusClassName(booking.status)}`}>
+                      <td
+                        className={`status-cell ${getStatusClassName(
+                          booking.status
+                        )}`}
+                      >
                         {booking.status}
                       </td>
-                      <td style={{ textAlign: 'center' }}>
+                      <td style={{ textAlign: "center" }}>
                         <button
                           className="detail-button"
-                          onClick={() => navigate(`/booking-details/${booking.key}`)}
+                          onClick={() =>
+                            navigate(`/booking-details/${booking.key}`)
+                          }
                         >
                           Details
                         </button>
@@ -273,11 +298,11 @@ const ManageBookings = () => {
                           className="cancel-button cancel-button-booking"
                           onClick={() => handleCancel(booking)}
                           disabled={
-                            booking.status === 'Cancelled' ||
-                            booking.status === 'Pending' ||
-                            booking.status === 'Rated' ||
-                            booking.status === 'Checked-in' ||
-                            booking.status === 'Pending Payment'
+                            booking.status === "Cancelled" ||
+                            booking.status === "Pending" ||
+                            booking.status === "Rated" ||
+                            booking.status === "Checked-in" ||
+                            booking.status === "Pending Payment"
                           }
                         >
                           Cancel
@@ -286,10 +311,10 @@ const ManageBookings = () => {
                           className="rate-button rate-button-booking"
                           onClick={() => handleRating(booking)}
                           disabled={
-                            booking.status === 'Cancelled' ||
-                            booking.status === 'Rated' ||
-                            booking.status === 'Pending Payment' ||
-                            booking.status === 'Paid'
+                            booking.status === "Cancelled" ||
+                            booking.status === "Rated" ||
+                            booking.status === "Pending Payment" ||
+                            booking.status === "Paid"
                           }
                         >
                           Rate
@@ -311,8 +336,18 @@ const ManageBookings = () => {
                                   viewBox="0 0 64 41"
                                   xmlns="http://www.w3.org/2000/svg"
                                 >
-                                  <g transform="translate(0 1)" fill="none" fillRule="evenodd">
-                                    <ellipse fill="#f5f5f5" cx="32" cy="33" rx="32" ry="7"></ellipse>
+                                  <g
+                                    transform="translate(0 1)"
+                                    fill="none"
+                                    fillRule="evenodd"
+                                  >
+                                    <ellipse
+                                      fill="#f5f5f5"
+                                      cx="32"
+                                      cy="33"
+                                      rx="32"
+                                      ry="7"
+                                    ></ellipse>
                                     <g fillRule="nonzero" stroke="#d9d9d9">
                                       <path d="M55 12.76L44.854 1.258C44.367.474 43.656 0 42.907 0H21.093c-.749 0-1.46.474-1.947 1.257L9 12.761V22h46v-9.24z"></path>
                                       <path
@@ -323,7 +358,9 @@ const ManageBookings = () => {
                                   </g>
                                 </svg>
                               </div>
-                              <div className="ant-empty-description">No data</div>
+                              <div className="ant-empty-description">
+                                No data
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -335,30 +372,32 @@ const ManageBookings = () => {
             </table>
 
             {getCurrentBookings().length > bookingsPerPage && (
-                <>
-                  <div
-                    style={{
-                      textAlign: "center",
-                      marginBottom: "1rem",
-                      marginTop: "2rem",
-                      fontSize: "2rem",
-                    }}
-                  >
-                    Page {currentPage} of{" "}
-                    {Math.ceil(getCurrentBookings().length / bookingsPerPage)}
-                  </div>
-                  <Pagination
-                    count={Math.ceil(getCurrentBookings().length / bookingsPerPage)}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    variant="outlined"
-                    shape="rounded"
-                    size="large"
-                    className={classes.pagination}
-                  />
-                </>
-              )}
+              <>
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginBottom: "1rem",
+                    marginTop: "2rem",
+                    fontSize: "2rem",
+                  }}
+                >
+                  Page {currentPage} of{" "}
+                  {Math.ceil(getCurrentBookings().length / bookingsPerPage)}
+                </div>
+                <Pagination
+                  count={Math.ceil(
+                    getCurrentBookings().length / bookingsPerPage
+                  )}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  color="primary"
+                  variant="outlined"
+                  shape="rounded"
+                  size="large"
+                  className={classes.pagination}
+                />
+              </>
+            )}
           </>
         )}
       </div>

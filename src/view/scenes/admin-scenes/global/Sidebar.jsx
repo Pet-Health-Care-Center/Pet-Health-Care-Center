@@ -13,6 +13,7 @@ import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import PetsIcon from "@mui/icons-material/Pets";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../../../Components/firebase/firebase";
 
@@ -223,11 +224,10 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
-
             <Item
-              title="Calendar"
-              to="/admin/calendar"
-              icon={<CalendarTodayOutlinedIcon sx={{ fontSize: "22px" }} />}
+              title="Refund Data"
+              to="/admin/refundData"
+              icon={<AttachMoneyIcon sx={{ fontSize: "22px" }} />}
               selected={selected}
               setSelected={setSelected}
             />

@@ -1,5 +1,5 @@
-const BASE_URL = "https://mypetcare.onrender.com";
-const LOCAL_BASE_URL = "http://localhost:5000";
+
+const BASE_URL = "http://localhost:5000";
 
 export const fetchServices = async () => {
   const response = await fetch(`${BASE_URL}/allBookingData/services`);
@@ -29,7 +29,7 @@ export const updateCageHistory = async (bookingId, cageHistory) => {
   try {
     // http://localhost:5000/allBookingData/updateCageHistory/BK0207072855
     const response = await fetch(
-      `${LOCAL_BASE_URL}/allBookingData/updateCageHistory/${bookingId}`,
+      `${BASE_URL}/allBookingData/updateCageHistory/${bookingId}`,
       {
         method: "PUT",
         headers: {

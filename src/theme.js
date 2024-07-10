@@ -212,3 +212,53 @@ export const useMode = () => {
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);
   return [theme, colorMode];
 };
+
+export const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    background: {
+      default: "#303030",
+      paper: "#424242",
+    },
+    text: {
+      primary: "#ffffff",
+    },
+  },
+  components: {
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          fontSize: '12px', // Tùy chỉnh kích thước font toàn cục
+        },
+      },
+    },
+    MuiPickersDay: {
+      styleOverrides: {
+        root: {
+          fontSize: '12px', // Tùy chỉnh kích thước font cho ngày
+        },
+      },
+    },
+    MuiPickersCalendarHeader: {
+      styleOverrides: {
+        switchHeader: {
+          fontSize: '12px', // Tùy chỉnh kích thước font cho tiêu đề lịch
+        },
+      },
+    },
+    MuiPickersToolbar: {
+      styleOverrides: {
+        toolbar: {
+          fontSize: '12px', // Tùy chỉnh kích thước font cho thanh công cụ
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#424242', // Nền tối cho DatePicker
+        },
+      },
+    },
+  },
+});
