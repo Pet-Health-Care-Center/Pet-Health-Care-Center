@@ -403,32 +403,59 @@ function Home() {
           <div className="testimonials-vet">
         <div className="testimonial-vet">
             <div className="quote">
+<<<<<<< HEAD
                 <p>"I am deeply honored to receive the Veterinary Leadership Award. This recognition reflects not just my efforts but also the unwavering support of my family, colleagues, and everyone who has been part of this journey."</p>
             </div>
             <div className="profile">
                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRr_FqJ9sFpWCgPzYiSOBSwYHQR07r7uvBdsQ&s" alt="John Larson"/>
                 <div className="name">John Larson</div>
                 <div className="title">Veterinary Leadership Award</div>
+=======
+                <p>"Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat ."</p>
+            </div>
+            <div className="profile">
+                <img src="https://via.placeholder.com/80" alt="John Larson"/>
+                <div className="name">John Larson</div>
+                <div className="title">Entrepreneur</div>
+>>>>>>> 5bb6a4a8f1c8bbf3b16e529bab937c52e6863372
             </div>
         </div>
         <div className="testimonial-vet">
             <div className="quote">
+<<<<<<< HEAD
                 <p>"I am truly honored to receive the Veterinary Career Achievement Award. This recognition is a testament to the support and encouragement I have received from my family, colleagues, and mentors throughout my career."</p>
             </div>
             <div className="profile">
                 <img src="https://media.licdn.com/dms/image/D5622AQEIiWMfvDm7TQ/feedshare-shrink_800/0/1718896612666?e=2147483647&v=beta&t=MDBkyXEtHObPz6O_grfP4IF3scfygT6vgmt1aiypxoI" alt="Saul Goodman"/>
                 <div className="name">Saul Goodman</div>
                 <div className="title">Veterinary Career Achievement Award</div>
+=======
+                <p>"Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper."</p>
+            </div>
+            <div className="profile">
+                <img src="https://via.placeholder.com/80" alt="Saul Goodman"/>
+                <div className="name">Saul Goodman</div>
+                <div className="title">CEO & Founder</div>
+>>>>>>> 5bb6a4a8f1c8bbf3b16e529bab937c52e6863372
             </div>
         </div>
         <div className="testimonial-vet">
             <div className="quote">
+<<<<<<< HEAD
                 <p>"I am deeply honored to receive the Innovation in Veterinary Medicine Award. This recognition reflects the collective efforts and creativity of my incredible team and the support of our entire community."</p>
             </div>
             <div className="profile">
                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSj8UfhxRjRUscCP_J9OK9VTWZzcbODcjB_gUlNHAF68Z3FvQnug1ggzETazo5rRUCqZ-E&usqp=CAU" alt="Sara Wilsson"/>
                 <div className="name">Sara Wilsson</div>
                 <div className="title">Innovation in Veterinary Medicine Award</div>
+=======
+                <p>"Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa."</p>
+            </div>
+            <div className="profile">
+                <img src="https://via.placeholder.com/80" alt="Sara Wilsson"/>
+                <div className="name">Sara Wilsson</div>
+                <div className="title">Designer</div>
+>>>>>>> 5bb6a4a8f1c8bbf3b16e529bab937c52e6863372
             </div>
         </div>
     </div>

@@ -167,7 +167,7 @@ const BookingConfirm = () => {
             <p className="confirm-pet-title">
           <RiInformationLine className="icon icon-info" />
               <strong>PET INFOMATION</strong>
-            </p>
+            </p>  
             {selectedPet.imageUrl && (
               <img
                 src={selectedPet.imageUrl}
