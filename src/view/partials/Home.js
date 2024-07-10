@@ -17,6 +17,7 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import useForceUpdate from "../../hooks/useForceUpdate";
+import { getDatabase, get, ref, onValue } from "firebase/database";
 import Box from "@mui/material/Box";
 import Rating from "@mui/material/Rating";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -26,7 +27,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import useViewport from "../../hooks/useViewport";
-import { getAllUsers } from "../account/getUserData";
 
 function Home() {
   const typedElement = useRef(null);
@@ -106,6 +106,22 @@ function Home() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user && user.uid) {
+      const db = getDatabase();
+      const userRef = ref(db, "users/" + user.uid);
+
+      onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+
+        console.log(data)
+        if (data) {
+          setAvatar(data.avatar)
+        }
+      });
+    } 
+  }, [user]);
 
   const book = () => {
     if (user) {
@@ -203,34 +219,43 @@ function Home() {
     navigate("/#home");
   };
   useEffect(() => {
+    // Kiểm tra xem có user hay không trước khi gọi fetchAllBookings
+    if (!user) {
+      console.log('No user is logged in');
+      return; // Nếu không có user, thoát khỏi useEffect
+    }
+
     const fetchAllBookings = async () => {
-      try {
-        const usersData = await getAllUsers();
-        let allBookings = [];
-          Object.keys(usersData).forEach((userId) => {
-            const userData = usersData[userId];
-            if (userData.bookings) {
-              Object.keys(userData.bookings).forEach((bookingId) => {
-                const booking = userData.bookings[bookingId];
-                allBookings.push({
-                  userId,
-                  bookingId,
-                  ...booking,
-                });
+      const db = getDatabase();
+      const usersRef = ref(db, 'users');
+      const snapshot = await get(usersRef);
+      const usersData = snapshot.val();
+      let allBookings = [];
+
+      if (usersData) {
+        Object.keys(usersData).forEach((userId) => {
+          const userData = usersData[userId];
+          if (userData.bookings) {
+            Object.keys(userData.bookings).forEach((bookingId) => {
+              const booking = userData.bookings[bookingId];
+              allBookings.push({
+                userId,
+                bookingId,
+                ...booking,
               });
-            }
-          });
-
-  
-        setBookedSlots(allBookings);
-      } catch (error) {
-        console.error("Failed to fetch all bookings:", error);
+            });
+          }
+        });
       }
+      setBookedSlots(allBookings);
     };
-  
-    fetchAllBookings();
-  }, [user]);
 
+    fetchAllBookings();
+  }, [user]); // Thêm user vào dependency array để useEffect chỉ chạy khi user thay đổi
+
+  useEffect(() => {
+    console.log(user);
+  }, [user]);
 
   useEffect(() => {
     const hasEnoughSlides = bookedSlots.length > slidesPerView;
@@ -242,10 +267,7 @@ function Home() {
       (booking) => booking.status === "Rated" && booking.rating > 3
     );
 
-    const limitedRatedBookings = ratedBookings.slice(0, 10);
-
-
-    return limitedRatedBookings.map((booking, index) => (
+    return ratedBookings.map((booking, index) => (
       <SwiperSlide key={booking.id} virtualIndex={index}>
         <div className="testimonial-box">
           <img
@@ -354,51 +376,62 @@ function Home() {
           </div>
           <div className="about-text" data-aos="fade-left">
             <span className="text-about">
-              Over 16 Years of Veterinary Experience
+            Awarded for outstanding creative vision and innovation in game direction and design.
             </span>
             <p className="font_1">
               <span className="text1-about">
-                With over 16 years of experience working in the field of
-                veterinary medicine, I am a passionate veterinarian with a deep
-                understanding of the health and happiness of pet animals. I
-                graduated from Hanoi National University School of Medicine and
-                have worked at many reputable veterinary clinics and veterinary
-                hospitals throughout the area. Through thousands of animal
-                treatment and care cases, I have accumulated valuable experience
-                and diverse professional skills. I am always dedicated and
-                dedicated to caring for each patient, along with dedicated
-                understanding and advice to owners on how to care for and
-                protect their pets' health.
+              I am deeply honored to receive the "Veterinarians of the Year" award. 
+              I sincerely thank the organizers and colleagues for their trust and votes. 
+              Thank you to all pet owners for your continued trust and support. 
+              I am committed to continuing my dedication to providing the best veterinary care services. 
+              Sincerely, thank you!
               </span>
             </p>
           </div>
+          
         </div>
-        <div className="about-container">
+        <div style={{ marginTop: "10px", marginRight: "700px" }}>
+          <div className="name">Jonny Sin</div>
+                <div className="title" style={{ marginBottom: "80px"}}>Sharp</div>
+                </div>
+        <div className="about-container2">
           <div className="about-text2" data-aos="fade-right">
-            <span className="text-about">
-              Over 16 Years of Veterinary Experience
+            <span className="text-about2">
+            There are also other doctors who have also made efforts this year
             </span>
-            <p className="font_1">
-              <span className="text1-about">
-                In addition to my daily work, I also regularly participate in
-                community education activities to share my knowledge and
-                experience with the community, while creating high awareness of
-                health issues and disease prevention for people. animal. My
-                mission is to bring peace and happiness to every family through
-                health care for their pets. With enthusiasm and extensive
-                knowledge, I am committed to continuing to contribute to the
-                development of the field of veterinary medicine and bring the
-                best care services to the community.
-              </span>
-            </p>
           </div>
-          <div className="about-image2" data-aos="fade-left">
-            <img
-              className="img-about"
-              src="https://static.wixstatic.com/media/84770f_e57bb42011fe4e91992f1ceeece2a7b3~mv2_d_4000_3947_s_4_2.jpg/v1/fill/w_526,h_519,al_c,q_80,usm_0.66_1.00_0.01,enc_auto/84770f_e57bb42011fe4e91992f1ceeece2a7b3~mv2_d_4000_3947_s_4_2.jpg"
-              fetchpriority="high"
-            ></img>
-          </div>
+          <div className="testimonials-vet">
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"I am deeply honored to receive the Veterinary Leadership Award. This recognition reflects not just my efforts but also the unwavering support of my family, colleagues, and everyone who has been part of this journey."</p>
+            </div>
+            <div className="profile">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRr_FqJ9sFpWCgPzYiSOBSwYHQR07r7uvBdsQ&s" alt="John Larson"/>
+                <div className="name">John Larson</div>
+                <div className="title">Veterinary Leadership Award</div>
+            </div>
+        </div>
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"I am truly honored to receive the Veterinary Career Achievement Award. This recognition is a testament to the support and encouragement I have received from my family, colleagues, and mentors throughout my career."</p>
+            </div>
+            <div className="profile">
+                <img src="https://media.licdn.com/dms/image/D5622AQEIiWMfvDm7TQ/feedshare-shrink_800/0/1718896612666?e=2147483647&v=beta&t=MDBkyXEtHObPz6O_grfP4IF3scfygT6vgmt1aiypxoI" alt="Saul Goodman"/>
+                <div className="name">Saul Goodman</div>
+                <div className="title">Veterinary Career Achievement Award</div>
+            </div>
+        </div>
+        <div className="testimonial-vet">
+            <div className="quote">
+                <p>"I am deeply honored to receive the Innovation in Veterinary Medicine Award. This recognition reflects the collective efforts and creativity of my incredible team and the support of our entire community."</p>
+            </div>
+            <div className="profile">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSj8UfhxRjRUscCP_J9OK9VTWZzcbODcjB_gUlNHAF68Z3FvQnug1ggzETazo5rRUCqZ-E&usqp=CAU" alt="Sara Wilsson"/>
+                <div className="name">Sara Wilsson</div>
+                <div className="title">Innovation in Veterinary Medicine Award</div>
+            </div>
+        </div>
+    </div>
         </div>
         <div className="font_2" data-aos="zoom-in-up">
           <h3>What Our Happy Clients Say</h3>
