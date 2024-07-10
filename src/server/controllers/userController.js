@@ -1,8 +1,11 @@
-
 // server/controllers/userController.js
-const {database, ref: dbRef, get, update, set } = require("../database/conn");
-const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
-
+const { database, ref: dbRef, get, update, set } = require("../database/conn");
+const {
+  getStorage,
+  ref: storageRef,
+  uploadBytes,
+  getDownloadURL,
+} = require("firebase/storage");
 
 const getUserById = async (req, res) => {
   const { userId } = req.params;
@@ -28,10 +31,10 @@ const updateUserById = async (req, res) => {
     console.log(`Updating user ${userId} with data`, updates);
     const userRef = dbRef(database, `users/${userId}`);
     await update(userRef, updates);
-    res.status(200).json({ message: 'User updated successfully' });
+    res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
     console.error("Error updating user:", error);
-    res.status(500).json({ message: 'Error updating user data', error });
+    res.status(500).json({ message: "Error updating user data", error });
   }
 };
 
@@ -40,8 +43,11 @@ const uploadAvatar = async (req, res) => {
   const file = req.file;
   try {
     const storage = getStorage();
-    const storageReference = storageRef(storage, `avatars/${userId}/${file.originalname}`);
-    
+    const storageReference = storageRef(
+      storage,
+      `avatars/${userId}/${file.originalname}`
+    );
+
     // Set metadata for the file
     const metadata = {
       contentType: file.mimetype,
@@ -56,7 +62,7 @@ const uploadAvatar = async (req, res) => {
     res.status(200).json({ avatar: downloadURL });
   } catch (error) {
     console.error("Error uploading avatar:", error);
-    res.status(500).json({ message: 'Error uploading avatar', error });
+    res.status(500).json({ message: "Error uploading avatar", error });
   }
 };
 const getAllUsers = async (req, res) => {
@@ -75,6 +81,45 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+const getRefundMoneyByUserId = async (req, res) => {
+  const userId = req.params.userId;
 
+  try {
+    console.log(`Getting refund of user ${userId}`);
+    const userRef = dbRef(database, `users/${userId}/refundMoney`);
+    const snapshot = await get(userRef);
+    if (snapshot.exists()) {
+      const userData = snapshot.val();
+      res.status(200).json(userData);
+    } else {
+      res.status(404).json({ error: "Refund not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
-module.exports = { getUserById, updateUserById, uploadAvatar, getAllUsers };
+const updateRefundMoneyByUserId = async (req, res) => {
+  const userId = req.params.userId;
+  const refundKey = req.params.refundKey;
+  const updates = req.body;
+  try {
+    console.log(`Updating user ${userId} with data`, updates);
+    const userRef = dbRef(database, `users/${userId}/refundMoney/${refundKey}`);
+    await update(userRef, updates);
+    res.status(200).json({ message: "User updated successfully" });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Error updating user data", error });
+  }
+};
+
+module.exports = {
+  getUserById,
+  updateUserById,
+  uploadAvatar,
+  getAllUsers,
+  getRefundMoneyByUserId,
+  updateRefundMoneyByUserId,
+};

@@ -102,7 +102,7 @@ const Dashboard = () => {
   useEffect(() => {
     const updateRevenue = () => {
       const currentDate = getCurrentDate();
-      console.log(isCustomDateSelected);
+      // console.log(isCustomDateSelected);
       if (isCustomDateSelected && selectedDate !== currentDate) {
         const totalPaidForSelectedDate = getTotalPaid(selectedDate, "date");
         setDailyRevenue(totalPaidForSelectedDate.toLocaleString() + ",000");

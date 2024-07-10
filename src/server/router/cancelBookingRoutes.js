@@ -1,9 +1,6 @@
-
-const express = require('express');
-const { getDatabase, ref, get, update, set } = require('firebase/database');
+const express = require("express");
 const router = express.Router();
-const  {cancelBooking} = require("../controllers/cancelBookingController")
+const { cancelBooking } = require("../controllers/cancelBookingController");
 
-router.post('/', cancelBooking);
+router.post("/", cancelBooking);
 module.exports = router;
-   

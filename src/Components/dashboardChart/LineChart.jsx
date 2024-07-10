@@ -3,7 +3,7 @@ import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import {  mockLineData } from "../../view/data/mockData";
 
-const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
+const LineChart = ({ isDashboard = false }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -54,7 +54,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
         reverse: false,
       }}
       yFormat=" >-.2f"
-      curve="catmullRom"
+      curve="monotoneX"
       axisTop={null}
       axisRight={null}
       axisBottom={{
