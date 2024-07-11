@@ -46,6 +46,7 @@ const ManageBooking = () => {
 
     if (usersData) {
       Object.keys(usersData).forEach((userId) => {
+        console.log(userId);
         const userData = usersData[userId];
         if (userData.username && userData.bookings) {
           Object.keys(userData.bookings).forEach((bookingId) => {

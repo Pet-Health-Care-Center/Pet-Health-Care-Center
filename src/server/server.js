@@ -43,12 +43,15 @@ setupSwagger(app);
 
 // Middleware to parse JSON requests
 app.use(express.json());
-
+app.use((req, res, next) => {
+  console.log(`${req.method} request for '${req.url}'`);
+  next();
+});
 // Use routes
 app.use("/userData", userRoutes);
-app.use('/bookings', bookingRoutes);
-app.use('/cancel-booking', cancelBookingRoutes);
-app.use('/pets', petRoutes);
+app.use("/bookings", bookingRoutes);
+app.use("/cancel-booking", cancelBookingRoutes);
+app.use("/pets", petRoutes);
 app.use("/auth", authRoutes);
 app.use("/allBookingData", servicesRoutes);
 app.use("/addBookingData", addBookingRoutes);

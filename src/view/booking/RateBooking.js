@@ -70,6 +70,8 @@ const RatingBooking = () => {
         console.log(userData)
         setUsername(userData.username);
         setAvatar(userData.avatar)
+        console.log(username)
+        console.log(avatar)
       } catch (error) {
         setError(error.message);
       } finally {

@@ -90,7 +90,7 @@ const RefundData = () => {
     });
 
     setMockWithdrawData(sortedData);
-  }, []);
+  }, [mockWithdrawData]);
 
   const handleGenerateQr = (request) => {
     const qrUrl = `https://img.vietqr.io/image/${request.bank}-${

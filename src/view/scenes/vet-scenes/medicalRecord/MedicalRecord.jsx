@@ -195,7 +195,6 @@ const MedicalRecord = () => {
         const updatedCagePets = [...(cageData?.pets || []), petDetails];
         await update(cageRef, { status: "Occupied", pets: updatedCagePets });
         toast.success("Medical record saved successfully!");
-
       } catch (error) {
         console.error("Error saving medical record:", error);
         toast.error("Error saving medical record. Please try again.");
@@ -245,7 +244,7 @@ const MedicalRecord = () => {
           ...record,
         },
       };
-      await update(bookingRef, updatedBookingData);
+      // await update(bookingRef, updatedBookingData);
 
       // Cập nhật dữ liệu lịch trình của bác sĩ thú y
       const vetScheduleRef = ref(
@@ -260,7 +259,7 @@ const MedicalRecord = () => {
           if (item.bookingId === booking.bookingId) {
             return {
               ...item,
-              isChecked: true,
+              isChecked: false,
             };
           }
           return item;
@@ -284,7 +283,7 @@ const MedicalRecord = () => {
         bookingId: booking.bookingId,
         ...record,
       });
-      await update(petRef, { medicalHistory: updatedMedicalHistory });
+      // await update(petRef, { medicalHistory: updatedMedicalHistory });
 
       console.log("Updated pet medical history:", updatedMedicalHistory);
 
@@ -455,8 +454,8 @@ const MedicalRecord = () => {
         </Grid>
       </Grid>
 
-    <button onClick={toggleMedicalHistory}>Medical History</button>
-    
+      <button onClick={toggleMedicalHistory}>Medical History</button>
+
       {showMedicalHistory && (
         <Box mt={2} height={180} overflow={"auto"} border={"solid 1px black"}>
           <Grid container spacing={3} padding={2}>

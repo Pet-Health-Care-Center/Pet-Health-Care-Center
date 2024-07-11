@@ -47,7 +47,8 @@ exports.getBookingsByUserId = async (req, res) => {
       });
 
       const compareBookings = (a, b) => {
-        const statusDifference = statusToNumber(a.status) - statusToNumber(b.status);
+        const statusDifference =
+          statusToNumber(a.status) - statusToNumber(b.status);
         if (statusDifference !== 0) return statusDifference;
 
         const dateA = new Date(`${a.date} ${a.time}`);
@@ -70,19 +71,25 @@ exports.getBookingsByUserId = async (req, res) => {
 
 exports.getBookingDetails = async (req, res) => {
   const { userId, bookingId } = req.params;
-  const db = getDatabase()
+  const db = getDatabase();
 
   try {
     const bookingRef = ref(db, `users/${userId}/bookings/${bookingId}`);
-    const medicalRecordRef = ref(db, `users/${userId}/bookings/${bookingId}/medicalRecord`);
-    const cageHistoryRef = ref(db, `users/${userId}/bookings/${bookingId}/cageHistory`);
+    const medicalRecordRef = ref(
+      db,
+      `users/${userId}/bookings/${bookingId}/medicalRecord`
+    );
+    const cageHistoryRef = ref(
+      db,
+      `users/${userId}/bookings/${bookingId}/cageHistory`
+    );
 
     const bookingSnapshot = await get(bookingRef);
     const medicalRecordSnapshot = await get(medicalRecordRef);
     const cageHistorySnapshot = await get(cageHistoryRef);
 
     if (!bookingSnapshot.exists()) {
-      return res.status(404).json({ error: 'Booking not found' });
+      return res.status(404).json({ error: "Booking not found" });
     }
 
     const bookingData = bookingSnapshot.val();
@@ -90,19 +97,21 @@ exports.getBookingDetails = async (req, res) => {
     const cageHistoryData = cageHistorySnapshot.val() ?? null;
 
     // Broadcast the updated booking details to all WebSocket clients
-    const wss = req.app.get('wss');
+    const wss = req.app.get("wss");
     if (wss) {
-      wss.clients.forEach(client => {
+      wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'bookingUpdated',
-            data: {
-              bookingId,
-              bookingData,
-              medicalRecordData,
-              cageHistoryData
-            }
-          }));
+          client.send(
+            JSON.stringify({
+              type: "bookingUpdated",
+              data: {
+                bookingId,
+                bookingData,
+                medicalRecordData,
+                cageHistoryData,
+              },
+            })
+          );
         }
       });
     }
@@ -110,26 +119,26 @@ exports.getBookingDetails = async (req, res) => {
     return res.status(200).json({
       booking: bookingData,
       medicalRecord: medicalRecordData,
-      cageHistory: cageHistoryData
+      cageHistory: cageHistoryData,
     });
   } catch (error) {
-    console.error('Error fetching booking details:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching booking details:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
 exports.getServices = async (req, res) => {
   try {
     const db = getDatabase();
-    const servicesRef = ref(db, 'services');
+    const servicesRef = ref(db, "services");
 
     const snapshot = await get(servicesRef);
     const services = snapshot.val();
 
     if (services) {
-      const servicesArray = Object.keys(services).map(key => ({
+      const servicesArray = Object.keys(services).map((key) => ({
         ...services[key],
-        id: key
+        id: key,
       }));
       res.status(200).json({ services: servicesArray });
     } else {
@@ -137,10 +146,9 @@ exports.getServices = async (req, res) => {
     }
   } catch (error) {
     console.error("Error fetching services:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
 exports.fetchAllBookingsUser = async (req, res) => {
   const { userId } = req.params;
 
