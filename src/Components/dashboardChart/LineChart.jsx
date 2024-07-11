@@ -1,9 +1,13 @@
 import { ResponsiveLine } from "@nivo/line";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import {  mockLineData } from "../../view/data/mockData";
+import { mockLineData } from "../../view/data/mockData";
 
-const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
+const formatCurrency = (value) => {
+  return `${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+};
+
+const LineChart = ({ isDashboard = false }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -54,7 +58,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
         reverse: false,
       }}
       yFormat=" >-.2f"
-      curve="catmullRom"
+      curve="monotoneX"
       axisTop={null}
       axisRight={null}
       axisBottom={{
@@ -62,7 +66,7 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
         tickSize: 0,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "transportation", // added
+        legend: isDashboard ? undefined : "Months", // added
         legendOffset: 36,
         legendPosition: "middle",
       }}
@@ -72,9 +76,10 @@ const LineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
         tickSize: 3,
         tickPadding: 5,
         tickRotation: 0,
-        legend: isDashboard ? undefined : "count", // added
-        legendOffset: -40,
+        legend: isDashboard ? undefined : "Revenue", // added
+        legendOffset: -50,
         legendPosition: "middle",
+        format: formatCurrency,
       }}
       enableGridX={false}
       enableGridY={false}

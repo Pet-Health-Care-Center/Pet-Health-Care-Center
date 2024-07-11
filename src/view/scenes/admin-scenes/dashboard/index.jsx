@@ -119,7 +119,7 @@ const Dashboard = () => {
         previousDay.previousDay,
         "date"
       );
-      setDailyRevenue(totalPaidForDate.toLocaleString() + ",000");
+      setDailyRevenue(totalPaidForDate);
 
       const dailyPercentageChange =
         totalPaidForPreviousDay === 0
@@ -142,7 +142,7 @@ const Dashboard = () => {
         `${previousMonth.year}-${previousMonth.month}`,
         "month"
       );
-      setMonthlyRevenue(totalPaidForMonth.toLocaleString() + ",000");
+      setMonthlyRevenue(totalPaidForMonth);
 
       const monthlyPercentageChange =
         totalPaidForPreviousMonth === 0
@@ -159,7 +159,7 @@ const Dashboard = () => {
       // Yearly Revenue
       const totalPaidForYear = getTotalPaid(currentDate.split("-")[0], "year");
       const totalPaidForPreviousYear = getTotalPaid(previousYear, "year");
-      setYearlyRevenue(totalPaidForYear.toLocaleString() + ",000");
+      setYearlyRevenue(totalPaidForYear);
 
       const yearlyPercentageChange =
         totalPaidForPreviousYear === 0
@@ -247,7 +247,9 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title={`${dailyRevenue} VND`}
+            title={`${(dailyRevenue * 1000).toLocaleString("en-US", {
+              maximumFractionDigits: 0,
+            })} VND`}
             subtitle="Daily Revenue"
             progress="0.75"
             increase={dailyRevenueChange}
@@ -266,7 +268,9 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title={`${monthlyRevenue} VND`}
+            title={`${(monthlyRevenue * 1000).toLocaleString("en-US", {
+              maximumFractionDigits: 0,
+            })} VND`}
             subtitle="Monthly Revenue"
             progress="0.50"
             increase={monthlyRevenueChange}
@@ -285,7 +289,9 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title={`${yearlyRevenue} VND`}
+            title={`${(yearlyRevenue * 1000).toLocaleString("en-US", {
+              maximumFractionDigits: 0,
+            })} VND`}
             subtitle="Yearly Revenue"
             progress="0.30"
             increase={yearlyRevenueChange}
@@ -342,7 +348,9 @@ const Dashboard = () => {
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
-                {yearlyRevenue} VND
+                {`${(yearlyRevenue * 1000).toLocaleString("en-US", {
+              maximumFractionDigits: 0,
+            })} VND`} 
               </Typography>
             </Box>
           </Box>
@@ -458,7 +466,9 @@ const Dashboard = () => {
                   borderRadius="4px"
                   fontSize={"2rem"}
                 >
-                  ${transaction.cost}
+                  {`${(transaction.cost * 1000).toLocaleString("en-US", {
+              maximumFractionDigits: 0,
+            })} VND`}
                 </Box>
               </Box>
             ))}

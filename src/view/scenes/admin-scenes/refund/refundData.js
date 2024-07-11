@@ -78,10 +78,11 @@ const RefundData = () => {
     const interval = setInterval(calculateTotals, 30000); // Recalculate every minute
 
     return () => clearInterval(interval);
-  }); // Dependencies for useEffect
+  },[mockTransactions, mockWithdrawData]); // Dependencies for useEffect
 
+ 
   useEffect(() => {
-    const sortedData = [...mockWithdrawData].sort((a, b) => {
+    const sortedData = [...initialMockWithdrawData].sort((a, b) => {
       if (a.isRefund === b.isRefund) {
         return 0;
       }
@@ -89,7 +90,7 @@ const RefundData = () => {
     });
 
     setMockWithdrawData(sortedData);
-  }, [mockWithdrawData]);
+  }, []);
 
   const handleGenerateQr = (request) => {
     const qrUrl = `https://img.vietqr.io/image/${request.bank}-${
