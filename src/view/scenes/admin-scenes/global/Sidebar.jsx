@@ -12,9 +12,9 @@ import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PetsIcon from "@mui/icons-material/Pets";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../../../Components/firebase/firebase";
+import userProfileImage from "../../../../public/assets/user.png";
 
 const Item = ({ title, to, icon, selected, setSelected, isCollapsed }) => {
   const theme = useTheme();
@@ -152,7 +152,7 @@ const Sidebar = () => {
                   alt="profile-user"
                   width="120px"
                   height="120px"
-                  src={`../../assets/user.png`}
+                  src={userProfileImage}
                   style={{
                     cursor: "pointer",
                     borderRadius: "100%",
