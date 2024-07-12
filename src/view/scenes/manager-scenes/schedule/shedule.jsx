@@ -4,9 +4,10 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin, { Draggable } from "@fullcalendar/interaction";
 import { Box, List, ListItem, ListItemText, Typography } from "@mui/material";
 import { getDatabase, ref, get, update } from "firebase/database";
+import Header from "../../../../Components/dashboardChart/Header";
 import { getAuth } from "firebase/auth";
 import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 const ManagerSchedule = () => {
   const [events, setEvents] = useState([]);
@@ -125,7 +126,9 @@ const ManagerSchedule = () => {
 
         const db = getDatabase();
         const updates = {};
-        updates[`users/${extendedProps.vetId}/schedule/${event.startStr}`] = true;
+        updates[
+          `users/${extendedProps.vetId}/schedule/${event.startStr}`
+        ] = true;
         await update(ref(db), updates);
         toast.success("Set schedule for vet successfully!");
       } else {
@@ -181,9 +184,10 @@ const ManagerSchedule = () => {
     <>
       <ToastContainer />
       <Box display="flex" flexDirection="column" height="100vh">
-        <Box p={2} bgcolor="primary.main" color="white">
-          <Typography variant="h5">Manage Doctor Schedules</Typography>
-        </Box>
+        <Header
+          title="Manage Doctor Schedule"
+          subtitle="All Bookings and Schedules are here!"
+        />
         <Box display="flex" flex="1" overflow="hidden">
           <Box flex="1" p={2} overflow="auto" ref={dragContainerRef}>
             <Typography variant="h6">Doctors</Typography>
@@ -195,7 +199,10 @@ const ManagerSchedule = () => {
                   data-vetid={vet.uid}
                   data-vetname={vet.name}
                   draggable
-                  style={{ backgroundColor: "#f0f0f0", border: "4px solid #ccc" }}
+                  style={{
+                    backgroundColor: "#f0f0f0",
+                    border: "4px solid #ccc",
+                  }}
                 >
                   <ListItemText
                     primary={vet.name}
@@ -209,7 +216,13 @@ const ManagerSchedule = () => {
               ))}
             </List>
           </Box>
-          <Box flex="3">
+          <Box
+            flex="3"
+            fontSize="18px"
+            color="white"
+            padding="8px"
+            marginRight="10px"
+          >
             <FullCalendar
               plugins={[dayGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
