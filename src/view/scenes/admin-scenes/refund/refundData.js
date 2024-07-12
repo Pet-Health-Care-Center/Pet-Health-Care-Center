@@ -232,7 +232,7 @@ const RefundData = () => {
             })} VND`}
             subtitle="Fee Today"
             progress="null"
-            icon={<AttachMoneyIcon />}
+            icon={<AttachMoneyIcon sx={{fontSize:"26px"}}/>}
           />
         </Box>
 
@@ -249,7 +249,7 @@ const RefundData = () => {
             })} VND`}
             subtitle="Total of Fee"
             progress="null"
-            icon={<AttachMoneyIcon />}
+            icon={<AttachMoneyIcon sx={{fontSize:"26px"}}/>}
           />
         </Box>
 
@@ -266,7 +266,7 @@ const RefundData = () => {
             })} VND`}
             subtitle="Total withdrawn"
             progress="null"
-            icon={<CurrencyExchangeIcon />}
+            icon={<CurrencyExchangeIcon sx={{fontSize:"26px"}}/>}
           />
         </Box>
 
@@ -350,7 +350,7 @@ const RefundData = () => {
                   variant="contained"
                   color="secondary"
                   onClick={() => handleGenerateQr(request)}
-                  style={{ marginRight: "20px" }}
+                  style={{ marginRight: "20px", fontSize: "14px" }}
                   disabled={request.isRefund}
                 >
                   Generate QR
@@ -358,6 +358,7 @@ const RefundData = () => {
                 <Button
                   variant="contained"
                   color="secondary"
+                  style={{ marginRight: "20px", fontSize: "14px" }}
                   onClick={() => handleRefunded(request)}
                   disabled={request.isRefund}
                 >
