@@ -18,7 +18,9 @@ import Form from "../../view/scenes/admin-scenes/form/index";
 import Line from "../../view/scenes/admin-scenes/line/index";
 import Pie from "../../view/scenes/admin-scenes/pie/index";
 import Service from "../../view/scenes/admin-scenes/services and cages/index";
-import Calendar from "../../view/scenes/admin-scenes/calendar/calendar";
+import DailyRevenue from "../scenes/admin-scenes/revenue/dailyRevenue";
+import MonthlyRevenue from "../../view/scenes/admin-scenes/revenue/monthlyRevenue";
+import WeeklyRevenue from "../../view/scenes/admin-scenes/revenue/weeklyRevenue";
 import RefundData from "../scenes/admin-scenes/refund/refundData";
 import { auth } from "../../Components/firebase/firebase";
 import { fetchUserById } from "../account/getUserData";
@@ -77,12 +79,20 @@ function Admin() {
   }, [navigate]);
 
   if (loading) {
-    return <LoadingDots/>;
+    return <LoadingDots />;
   }
 
   if (!user || !userRole) {
     return <Navigate to="/signIn" />;
   }
+
+  const RevenueRoutes = () => (
+    <Routes>
+      <Route path="daily" element={<DailyRevenue />} />
+      <Route path="monthly" element={<MonthlyRevenue />} />
+      <Route path="weekly" element={<WeeklyRevenue />} />
+    </Routes>
+  );
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -102,7 +112,7 @@ function Admin() {
               <Route path="pie" element={<Pie />} />
               <Route path="line" element={<Line />} />
               <Route path="refundData" element={<RefundData />} />
-              <Route path="calendar" element={<Calendar />} />
+              <Route path="revenue/*" element={<RevenueRoutes />} />
             </Routes>
           </main>
         </div>

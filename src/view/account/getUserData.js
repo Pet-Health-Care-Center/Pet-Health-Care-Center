@@ -2,7 +2,7 @@ const BASE_URL = "https://mypetcare.onrender.com/userData";
 const REFUND_BASE_URL = "http://localhost:5000/userData";
 
 export const fetchUserById = async (userId) => {
-  const response = await fetch(`${BASE_URL}/${userId}`);
+  const response = await fetch(`${REFUND_BASE_URL}/${userId}`);
   if (!response.ok) {
     throw new Error("Failed to fetch user data");
   }
@@ -10,7 +10,7 @@ export const fetchUserById = async (userId) => {
 };
 
 export const updateUserById = async (userId, updates) => {
-  const response = await fetch(`${BASE_URL}/${userId}`, {
+  const response = await fetch(`${REFUND_BASE_URL}/${userId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -40,7 +40,7 @@ export const uploadAvatar = async (userId, file) => {
 };
 
 export const getAllUsers = async () => {
-  const response = await fetch(`${BASE_URL}`);
+  const response = await fetch(`${REFUND_BASE_URL}`);
   if (!response.ok) {
     throw new Error("Failed to fetch user data");
   }

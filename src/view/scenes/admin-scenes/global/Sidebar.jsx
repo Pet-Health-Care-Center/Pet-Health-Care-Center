@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { ProSidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import "react-pro-sidebar/dist/css/styles.css";
@@ -8,6 +8,7 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
 import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutlined";
+import PaidIcon from "@mui/icons-material/Paid";
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -39,6 +40,28 @@ const Item = ({ title, to, icon, selected, setSelected, isCollapsed }) => {
   );
 };
 
+const SubCategoryItem = ({ title, to, selected, setSelected }) => {
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+  return (
+    <MenuItem
+      active={selected === title}
+      onClick={() => setSelected(title)}
+      style={{
+        color: "white",
+        backgroundColor:
+          selected === title ? colors.primary[700] : "transparent",
+        borderRadius: selected === title ? "5px" : "0",
+        maxWidth: "90%",
+        marginLeft: "5px",
+      }}
+    >
+      <Typography sx={{ fontSize: "14px", color: "white" }}>{title}</Typography>
+      <Link to={to} />
+    </MenuItem>
+  );
+};
+
 const Sidebar = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -51,7 +74,6 @@ const Sidebar = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // console.log(user);
         setUsername(user.displayName || user.email);
         setEmail(user.email);
       } else {
@@ -86,6 +108,15 @@ const Sidebar = () => {
       case "/admin/line":
         setSelected("Line Chart");
         break;
+      case "/admin/revenue/daily":
+        setSelected("Daily Revenue");
+        break;
+      case "/admin/revenue/weekly":
+        setSelected("Weekly Revenue");
+        break;
+      case "/admin/revenue/monthly":
+        setSelected("Monthly Revenue");
+        break;
       default:
         setSelected("Dashboard");
     }
@@ -110,6 +141,15 @@ const Sidebar = () => {
         },
         "& .pro-menu-item.active": {
           color: "#6870fa !important",
+        },
+        "& .pro-item-content": {
+          fontSize: "16px",
+          color: "white",
+          fontWeight: "400",
+          lineHeight: "1.5",
+        },
+        "& .pro-arrow": {
+          margin: "20px 15px",
         },
       }}
     >
@@ -194,6 +234,32 @@ const Sidebar = () => {
             >
               Data
             </Typography>
+
+            <SubMenu
+              title="Revenue Statistics"
+              icon={<PaidIcon sx={{ fontSize: "22px", color: "white" }} />}
+              opened="false"
+            >
+              <SubCategoryItem
+                title="Daily Revenue"
+                to="/admin/revenue/daily"
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <SubCategoryItem
+                title="Weekly Revenue"
+                to="/admin/revenue/weekly"
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <SubCategoryItem
+                title="Monthly Revenue"
+                to="/admin/revenue/monthly"
+                selected={selected}
+                setSelected={setSelected}
+              />
+            </SubMenu>
+
             <Item
               title="Manage User"
               to="/admin/team"

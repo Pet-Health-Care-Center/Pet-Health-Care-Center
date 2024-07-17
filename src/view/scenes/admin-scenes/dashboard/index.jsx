@@ -22,6 +22,7 @@ const Dashboard = () => {
   };
 
   const [dailyRevenue, setDailyRevenue] = useState(0);
+  const [weeklyRevenue, setWeeklyRevenue] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [yearlyRevenue, setYearlyRevenue] = useState(0);
   const [dailyRevenueChange, setDailyRevenueChange] = useState("0%");
@@ -30,6 +31,45 @@ const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState(getCurrentDate());
   const [isCustomDateSelected, setIsCustomDateSelected] = useState(false);
   const [newUser, setNewUser] = useState("");
+
+  // const getStartOfWeek = (date) => {
+  //   const currentDate = new Date(date);
+  //   const day = currentDate.getDay();
+  //   const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+  //   return new Date(currentDate.setDate(diff));
+  // };
+  // console.log(selectedDate);
+  // console.log(getStartOfWeek("2024-07-12"));
+  // const getWeekStartEndDate = () => {
+  //   const currentDate = new Date();
+  //   const firstDay = currentDate.getDate() - currentDate.getDay() + 1; // Monday
+  //   const startDate = new Date(currentDate.setDate(firstDay));
+  //   const lastDay = currentDate.getDate() - currentDate.getDay() + 7; // Sunday
+  //   const endDate = new Date(currentDate.setDate(lastDay));
+  //   return "Start day: "+formatDate(startDate) +" End day: "+ formatDate(endDate);
+  // };
+  // console.log(getWeekStartEndDate());
+
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+  const getWeekDates = () => {
+    const currentDate = new Date();
+    const firstDay = currentDate.getDate() - currentDate.getDay() + 1; // Monday
+    const startDate = new Date(currentDate.setDate(firstDay));
+    const weekDates = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      weekDates.push(formatDate(date));
+    }
+
+    return weekDates;
+  };
 
   const getTotalPaid = (date, type) => {
     let totalPaid = 0;
@@ -61,6 +101,8 @@ const Dashboard = () => {
         } else if (type === "month" && formattedDate.startsWith(date)) {
           totalPaid += bookingTotalPaid;
         } else if (type === "year" && formattedDate.startsWith(date)) {
+          totalPaid += bookingTotalPaid;
+        } else if (type === "week" && date.includes(formattedDate)) {
           totalPaid += bookingTotalPaid;
         }
       }
@@ -105,7 +147,7 @@ const Dashboard = () => {
       // console.log(isCustomDateSelected);
       if (isCustomDateSelected && selectedDate !== currentDate) {
         const totalPaidForSelectedDate = getTotalPaid(selectedDate, "date");
-        setDailyRevenue(totalPaidForSelectedDate.toLocaleString() + ",000");
+        setDailyRevenue(totalPaidForSelectedDate);
         return;
       }
 
@@ -132,6 +174,13 @@ const Dashboard = () => {
           ? "N/A"
           : `${dailyPercentageChange.toFixed(2)}%`
       );
+
+      // Weekly Revenue
+      const weekDates = getWeekDates();
+      // console.log(weekDates);
+      const weeklyTotal = getTotalPaid(weekDates, "week");
+      // console.log(weeklyTotal);
+      setWeeklyRevenue(weeklyTotal);
 
       // Monthly Revenue
       const totalPaidForMonth = getTotalPaid(
@@ -209,13 +258,13 @@ const Dashboard = () => {
         // console.log(fullDate);
         // console.log(getCurrentDate());
         if (fullDate > getCurrentDate()) {
-          console.log("new user");
+          // console.log("new user");
           setNewUser((newUserCount += 1));
         }
       }
     });
   });
-
+  // console.log(dailyRevenue);
   return (
     <Box m="20px">
       {/* HEADER */}
@@ -251,8 +300,6 @@ const Dashboard = () => {
               maximumFractionDigits: 0,
             })} VND`}
             subtitle="Daily Revenue"
-            progress="0.75"
-            increase={dailyRevenueChange}
             icon={
               <PointOfSaleIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -260,6 +307,29 @@ const Dashboard = () => {
             }
           />
         </Box>
+
+        <Box
+          gridColumn="span 3"
+          backgroundColor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <StatBox
+            title={`${(weeklyRevenue * 1000).toLocaleString("en-US", {
+              maximumFractionDigits: 0,
+            })} VND`}
+            subtitle="Weekly Revenue"
+            progress="0.30"
+            increase={yearlyRevenueChange}
+            icon={
+              <PointOfSaleIcon
+                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+              />
+            }
+          />
+        </Box>
+
         <Box
           gridColumn="span 3"
           backgroundColor={colors.primary[400]}
@@ -281,27 +351,7 @@ const Dashboard = () => {
             }
           />
         </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title={`${(yearlyRevenue * 1000).toLocaleString("en-US", {
-              maximumFractionDigits: 0,
-            })} VND`}
-            subtitle="Yearly Revenue"
-            progress="0.30"
-            increase={yearlyRevenueChange}
-            icon={
-              <PointOfSaleIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
+
         <Box
           gridColumn="span 3"
           backgroundColor={colors.primary[400]}
@@ -341,7 +391,7 @@ const Dashboard = () => {
                 fontWeight="600"
                 color={colors.grey[100]}
               >
-                Revenue Generated
+                Yearly Revenue Generated
               </Typography>
               <Typography
                 variant="h3"
@@ -349,8 +399,8 @@ const Dashboard = () => {
                 color={colors.greenAccent[500]}
               >
                 {`${(yearlyRevenue * 1000).toLocaleString("en-US", {
-              maximumFractionDigits: 0,
-            })} VND`} 
+                  maximumFractionDigits: 0,
+                })} VND`}
               </Typography>
             </Box>
           </Box>
@@ -467,18 +517,20 @@ const Dashboard = () => {
                   fontSize={"2rem"}
                 >
                   {`${(transaction.cost * 1000).toLocaleString("en-US", {
-              maximumFractionDigits: 0,
-            })} VND`}
+                    maximumFractionDigits: 0,
+                  })} VND`}
                 </Box>
               </Box>
             ))}
         </Box>
         {/* <Box
-          gridColumn="span 4"
-          gridRow="span 2"
-          backgroundColor={colors.primary[400]}
-          padding="30px"
-        ></Box> */}
+            gridColumn="span 4"
+            gridRow="span 2"
+            backgroundColor={colors.primary[400]}
+            padding="30px"
+          >
+            {weeklyRevenue}
+          </Box> */}
       </Box>
     </Box>
   );
