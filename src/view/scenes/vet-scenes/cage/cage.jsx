@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { getDatabase, ref, onValue, update, get } from "firebase/database";
 import { Box, Typography, Button, Pagination } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useTheme } from "@mui/material/styles";
@@ -13,6 +12,11 @@ import {
   fetchAllBookings,
   updateCageHistory,
 } from "../../../booking/fetchAllBookingData";
+import {
+  getCageByKey,
+  getCages,
+  updateCageByKey,
+} from "../../admin-scenes/services and cages/getServiceNCageData";
 const Booking = () => {
   const [cages, setCages] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +36,7 @@ const Booking = () => {
     const fetchUserData = async () => {
       try {
         const userData = await fetchUserById(user.uid);
-        console.log("Fetched user data:", userData);
+        // console.log("Fetched user data:", userData);
         setUserData(userData);
       } catch (error) {
         setError(error.message);
@@ -48,11 +52,9 @@ const Booking = () => {
   }, [user]);
 
   useEffect(() => {
-    const db = getDatabase();
-    const cagesRef = ref(db, "cages");
-    onValue(cagesRef, (snapshot) => {
-      const data = snapshot.val();
-      console.log("Cages data:", data); // Log the data
+    const fetchData = async () => {
+      const data = await getCages();
+      // console.log("Cages data:", data); // Log the data
 
       if (data) {
         const cageList = Object.keys(data)
@@ -71,13 +73,14 @@ const Booking = () => {
           );
         setCages(cageList);
       }
-    });
+    };
+    fetchData();
   }, [userData.fullname]);
   const handleOpenModal = (cageKey, bookingId) => {
     setSelectedCageKey(cageKey);
     setIsModalOpen(true);
     setSelectedBookingId(bookingId);
-    console.log(bookingId)
+    // console.log(bookingId);
   };
 
   const handleCloseModal = () => {
@@ -88,67 +91,62 @@ const Booking = () => {
   const handleConfirmReport = async (description) => {
     if (!selectedCageKey) return;
 
-    const db = getDatabase();
-    const cageRef = ref(db, `cages/${selectedCageKey}`);
     const currentDate = new Date();
-    currentDate.setDate(currentDate.getDate() + 2);
+    currentDate.setDate(currentDate.getDate());
     const formattedDate = currentDate.toLocaleDateString();
 
     try {
-      const snapshot = await get(cageRef);
-      if (snapshot.exists()) {
-        const cageData = snapshot.val();
-        const pets = cageData.pets || [];
+      const cageData = await getCageByKey(selectedCageKey);
+      // console.log(cageData);
+      const pets = cageData.pets || [];
 
-        const petIndex = pets.findIndex((pet) => pet.inCage);
-        if (petIndex !== -1) {
-          const pet = pets[petIndex];
-          const cageHistory = pet.cageHistory || [];
+      const petIndex = pets.findIndex((pet) => pet.inCage);
+      if (petIndex !== -1) {
+        const pet = pets[petIndex];
+        const cageHistory = pet.cageHistory || [];
 
-          const existingEntryIndex = cageHistory.findIndex(
+        const existingEntryIndex = cageHistory.findIndex(
+          (entry) => entry.date === formattedDate
+        );
+
+        if (existingEntryIndex === -1) {
+          cageHistory.push({ date: formattedDate, description });
+        } else {
+          cageHistory[existingEntryIndex].description = description;
+        }
+
+        pets[petIndex].cageHistory = cageHistory;
+
+        await updateCageByKey(selectedCageKey, { pets });
+        const bookingsResponse = await fetchAllBookings();
+        const bookings = bookingsResponse.bookings;
+
+        const booking = bookings.find(
+          (booking) => booking.bookingId === selectedBookingId
+        );
+
+        if (booking) {
+          const bookingCageHistory = booking.cageHistory || [];
+
+          const bookingExistingEntryIndex = bookingCageHistory.findIndex(
             (entry) => entry.date === formattedDate
           );
 
-          if (existingEntryIndex === -1) {
-            cageHistory.push({ date: formattedDate, description });
+          if (bookingExistingEntryIndex === -1) {
+            bookingCageHistory.push({ date: formattedDate, description });
           } else {
-            cageHistory[existingEntryIndex].description = description;
+            bookingCageHistory[bookingExistingEntryIndex].description =
+              description;
           }
-
-          pets[petIndex].cageHistory = cageHistory;
-
-          await update(cageRef, { pets });
-
-          const bookingsResponse = await fetchAllBookings();
-          const bookings = bookingsResponse.bookings;
-
-          const booking = bookings.find(
-            (booking) => booking.bookingId === selectedBookingId
-          );
-
-          if (booking) {
-            const bookingCageHistory = booking.cageHistory || [];
-
-            const bookingExistingEntryIndex = bookingCageHistory.findIndex(
-              (entry) => entry.date === formattedDate
-            );
-
-            if (bookingExistingEntryIndex === -1) {
-              bookingCageHistory.push({ date: formattedDate, description });
-            } else {
-              bookingCageHistory[bookingExistingEntryIndex].description =
-                description;
-            }
-            console.log(bookingCageHistory);
-            await updateCageHistory(booking.bookingId, bookingCageHistory);
-            handleCloseModal();
-          } else {
-            console.error(`Booking with ID ${selectedBookingId} not found.`);
-            handleCloseModal();
-          }
+          // console.log(bookingCageHistory);
+          await updateCageHistory(booking.bookingId, bookingCageHistory);
+          handleCloseModal();
         } else {
-          console.error("No pet currently in the cage.");
+          console.error(`Booking with ID ${selectedBookingId} not found.`);
+          handleCloseModal();
         }
+      } else {
+        console.error("No pet currently in the cage.");
       }
     } catch (error) {
       console.error(`Error updating cage ${selectedCageKey}:`, error);
@@ -159,51 +157,55 @@ const Booking = () => {
   const columns = [
     {
       field: "id",
-      headerName: (
+      headerName: "Cage ID",
+      width: 150,
+      editable: false,
+      renderHeader: () => (
         <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
           Cage ID
         </Typography>
       ),
-      width: 150,
-      editable: false,
       renderCell: ({ value }) => (
         <div style={{ fontSize: "16px" }}>{value}</div>
       ),
     },
     {
       field: "name",
-      headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
-          Cage name
-        </Typography>
-      ),
+      headerName: "Cage Name",
       flex: 0.5,
       editable: false,
       width: 150,
+      renderHeader: () => (
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
+          Cage Name
+        </Typography>
+      ),
       renderCell: ({ value }) => (
         <div style={{ fontSize: "16px" }}>{value}</div>
       ),
     },
     {
       field: "status",
-      headerName: (
+      headerName: "Status",
+      flex: 0.5,
+      editable: false,
+      renderHeader: () => (
         <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
           Status
         </Typography>
       ),
-      flex: 0.5,
-      editable: false,
       renderCell: ({ value }) => (
         <div style={{ fontSize: "16px" }}>{value}</div>
       ),
     },
     {
       field: "veterinarian",
-      headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Vet</Typography>
-      ),
+      headerName: "Vet",
       flex: 0.7,
       editable: false,
+      renderHeader: () => (
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Vet</Typography>
+      ),
       renderCell: ({ row }) => {
         const vet =
           row.pets && row.pets.find((pet) => pet.inCage)?.veterinarian;
@@ -216,11 +218,12 @@ const Booking = () => {
     },
     {
       field: "pets",
-      headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Pet</Typography>
-      ),
+      headerName: "Pet",
       flex: 1.3,
       editable: false,
+      renderHeader: () => (
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Pet</Typography>
+      ),
       renderCell: ({ value }) =>
         (value || [])
           .filter((pet) => pet.inCage)
@@ -232,28 +235,32 @@ const Booking = () => {
     },
     {
       field: "petOwner",
-      headerName: (
-        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>Pet Owner</Typography>
-      ),
+      headerName: "Pet Owner",
       flex: 1.3,
       editable: false,
-      renderCell: ({ value }) =>
-        (value || [])
+      renderHeader: () => (
+        <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
+          Pet Owner
+        </Typography>
+      ),
+      renderCell: ({ row }) =>
+        (row.pets || [])
           .filter((pet) => pet.inCage)
           .map((pet) => (
             <div key={pet.petId} style={{ fontSize: "16px" }}>
-              {pet.petOwner}
+              {pet?.petOwner}
             </div>
           )),
     },
     {
       field: "report",
-      headerName: (
+      headerName: "Report",
+      flex: 0.5,
+      renderHeader: () => (
         <Typography sx={{ fontSize: 18, fontWeight: "bold" }}>
           Report
         </Typography>
       ),
-      flex: 0.5,
       renderCell: (params) => (
         <div className="admin-report-button">
           <Button
@@ -324,9 +331,12 @@ const Booking = () => {
           "& .MuiInputBase-root": {
             width: "209px",
           },
+          "& .MuiDataGrid-overlay": {
+            fontSize: "18px",
+          },
         }}
       >
-        <DataGrid rows={displayedRows} columns={columns} pagination={false} />
+        <DataGrid rows={displayedRows} columns={columns} pagination={true} />
       </Box>
       <Box
         mt="20px"

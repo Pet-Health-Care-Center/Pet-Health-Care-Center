@@ -7,7 +7,6 @@ const {
   push,
 } = require("../database/conn");
 
-
 const getServices = async (req, res) => {
   try {
     const serviceRef = dbRef(database, `services`);
@@ -32,6 +31,35 @@ const getCages = async (req, res) => {
     }
   } catch (error) {
     console.error("Error get cages:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getCageByKey = async (req, res) => {
+  const { key } = req.params;
+  try {
+    const cageRef = dbRef(database, `cages/${key}`);
+    const snapshot = await get(cageRef);
+    if (snapshot.exists()) {
+      const cageData = snapshot.val();
+      res.status(200).json(cageData);
+    }
+  } catch (error) {
+    console.error("Error get cage:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const updateCageByKey = async (req, res) => {
+  const cageData = req.body;
+  const { key } = req.params;
+  try {
+    console.log(`Updating cage`, cageData);
+    const cageRef = dbRef(database, `cages/${key}`);
+    await update(cageRef, cageData);
+    res.status(200).json({ message: "Cage updated successfully" });
+  } catch (error) {
+    console.error("Error update cage:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -64,6 +92,8 @@ const addNewCage = async (req, res) => {
 module.exports = {
   getServices,
   getCages,
+  getCageByKey,
+  updateCageByKey,
   addNewService,
   addNewCage,
 };

@@ -16,6 +16,14 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../../../theme";
 import Header from "../../../../Components/dashboardChart/Header";
+import {
+  getCages,
+  addNewCage,
+  addNewService,
+  getCageByKey,
+  updateCageByKey,
+} from "../../admin-scenes/services and cages/getServiceNCageData";
+import { getAllUsers } from "../../../account/getUserData";
 
 const RoleEditCell = ({ id, value, api, vets, handleVetChange }) => {
   const [selectedVetId, setSelectedVetId] = useState(value ? value.id : "");
@@ -57,32 +65,36 @@ const Cage = () => {
   const rowsPerPage = 5;
 
   useEffect(() => {
-    const db = getDatabase();
-    const cagesRef = ref(db, "cages");
-    onValue(cagesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const cageList = Object.keys(data).map((key) => ({
-          key: key, // store the key here
-          ...data[key],
-        }));
-        setCages(cageList);
-      }
-    });
+    const fetchData = async () => {
+      try {
+        const cagesData = await getCages();
+        // console.log(cagesData);
 
-    const usersRef = ref(db, "users");
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const vetList = Object.keys(data)
-          .filter((key) => data[key].role === "veterinarian")
-          .map((key) => ({
-            id: key,
-            fullname: data[key].fullname,
+        if (cagesData) {
+          const cageList = Object.keys(cagesData).map((key) => ({
+            key: key, // store the key here
+            ...cagesData[key],
           }));
-        setVets(vetList);
+          setCages(cageList);
+        }
+
+        const userData = await getAllUsers();
+
+        if (userData) {
+          const vetList = Object.keys(userData)
+            .filter((key) => userData[key].role === "veterinarian")
+            .map((key) => ({
+              id: key,
+              fullname: userData[key].fullname,
+            }));
+          setVets(vetList);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    });
+    };
+
+    fetchData();
   }, []);
 
   const handleVetChange = (cageKey, vet) => {
@@ -92,78 +104,62 @@ const Cage = () => {
     }));
   };
 
-  const handleUpdate = (cageKey, vetId) => {
-    const db = getDatabase();
-    const cageRef = ref(db, `cages/${cageKey}`);
-
+  const handleUpdate = async (cageKey, vetId) => {
     const vet = selectedVets[vetId];
     if (!vet) {
       console.error(`No veterinarian found for id: ${vetId}`);
       return;
     }
 
-    get(cageRef)
-      .then((snapshot) => {
-        if (!snapshot.exists()) {
-          console.error(`No cage found with key: ${cageKey}`);
-          return;
-        }
+    const cageData = await getCageByKey(cageKey);
+    if (!cageData) {
+      console.error(`No cage found with key: ${cageKey}`);
+      return;
+    }
+    console.log("Current Cage Data:", cageData);
 
-        const cageData = snapshot.val();
-        console.log("Current Cage Data:", cageData);
-
-        const updatedPets = cageData.pets.map((pet) => {
-          if (pet.inCage) {
-            return {
-              ...pet,
-              veterinarian: { id: vet.id, fullname: vet.fullname },
-            };
-          }
-          return pet;
-        });
-
-        update(cageRef, { ...cageData, pets: updatedPets })
-          .then(() => {
-            console.log(`Cage ${cageKey} updated successfully.`);
-          })
-          .catch((error) => {
-            console.error(`Error updating cage ${cageKey}:`, error);
-          });
+    const updatedPets = cageData.pets.map((pet) => {
+      if (pet.inCage) {
+        return {
+          ...pet,
+          veterinarian: { id: vet.id, fullname: vet.fullname },
+        };
+      }
+      return pet;
+    });
+    const updatedCageData = { ...cageData, pets: updatedPets };
+    await updateCageByKey(cageKey, updatedCageData)
+      .then(() => {
+        console.log(`Cage ${cageKey} updated successfully.`);
       })
       .catch((error) => {
-        console.error(`Error getting cage data for key ${cageKey}:`, error);
+        console.error(`Error updating cage ${cageKey}:`, error);
       });
   };
-  const handleRelease = (cageKey) => {
-    const db = getDatabase();
-    const cageRef = ref(db, `cages/${cageKey}`);
 
-    get(cageRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const cageData = snapshot.val();
-          const pets = cageData.pets || [];
+  const handleRelease = async (cageKey) => {
+    try {
+      const cageData = await getCageByKey(cageKey);
 
-          // Find the pet that is currently in the cage
-          const petIndex = pets.findIndex((pet) => pet.inCage);
-          if (petIndex !== -1) {
-            pets[petIndex].inCage = false; // Set inCage to false
+      if (cageData) {
+        const pets = cageData.pets || [];
 
-            update(cageRef, { pets, status: "Available" })
-              .then(() => {
-                console.log(`Cage ${cageKey} released successfully.`);
-              })
-              .catch((error) => {
-                console.error(`Error releasing cage ${cageKey}:`, error);
-              });
-          } else {
-            console.error("No pet currently in the cage.");
-          }
+        // Find the pet that is currently in the cage
+        const petIndex = pets.findIndex((pet) => pet.inCage);
+        if (petIndex !== -1) {
+          pets[petIndex].inCage = false; // Set inCage to false
+
+          const updatedCageData = { ...cageData, pets, status: "Available" };
+
+          await updateCageByKey(cageKey, updatedCageData);
+          console.log(`Cage ${cageKey} released successfully.`);
+        } else {
+          console.error("No pet currently in the cage.");
         }
-      })
-      .catch((error) => {
-        console.error(`Error getting cage data for key ${cageKey}:`, error);
-      });
+      }
+    } catch (error) {
+      console.error(`Error releasing cage ${cageKey}:`, error);
+    }
   };
 
   const columns = [
@@ -368,6 +364,9 @@ const Cage = () => {
           },
           "& .MuiInputBase-root": {
             width: "209px",
+          },
+          "& .MuiDataGrid-overlay": {
+            fontSize: "18px",
           },
         }}
       >

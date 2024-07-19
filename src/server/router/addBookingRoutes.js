@@ -1,5 +1,10 @@
-const express = require('express');
-const { addBooking, updateAccountBalance, updateVetSchedule } = require("../controllers/addBookingController");
+const express = require("express");
+const {
+  addBooking,
+  updateAccountBalance,
+  updateVetSchedule,
+  updateBookingStatus,
+} = require("../controllers/addBookingController");
 const router = express.Router();
 
 /**
@@ -30,7 +35,7 @@ const router = express.Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/booking', addBooking);
+router.post("/booking", addBooking);
 
 /**
  * @swagger
@@ -55,7 +60,7 @@ router.post('/booking', addBooking);
  *       500:
  *         description: Internal server error
  */
-router.post('/account-balance', updateAccountBalance);
+router.post("/account-balance", updateAccountBalance);
 
 /**
  * @swagger
@@ -83,6 +88,31 @@ router.post('/account-balance', updateAccountBalance);
  *       500:
  *         description: Internal server error
  */
-router.post('/vet-schedule', updateVetSchedule);
+router.post("/vet-schedule", updateVetSchedule);
+
+/**
+ * @swagger
+ * /addBookingData/booking-status:
+ *   post:
+ *     summary: Update booking status
+ *     tags: [Bookings]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               newStatus:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking status updated successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/:userId/:bookingId", updateBookingStatus);
 
 module.exports = router;

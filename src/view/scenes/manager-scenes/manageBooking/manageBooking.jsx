@@ -23,6 +23,11 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import TextField from "@mui/material/TextField";
 import dayjs from "dayjs";
 import axios from "axios";
+import { getAllUsers } from "../../../account/getUserData";
+import {
+  updateAccountBalance,
+  updateBookingStatus,
+} from "../../../booking/fetchAddBooking";
 
 const ManageBooking = () => {
   const theme = useTheme();
@@ -37,10 +42,7 @@ const ManageBooking = () => {
   const [cleared, setCleared] = React.useState(false);
 
   const fetchAllBookings = async () => {
-    const db = getDatabase();
-    const usersRef = ref(db, "users");
-    const snapshot = await get(usersRef);
-    const usersData = snapshot.val();
+    const usersData = await getAllUsers();
     let allBookings = [];
 
     if (usersData) {
@@ -116,13 +118,11 @@ const ManageBooking = () => {
     setLoading(true);
 
     try {
-      const db = getDatabase();
-
-      // Update booking status in Firebase
-      await update(ref(db, `users/${row.userId}/bookings/${row.id}`), {
+      await updateBookingStatus(`${row.userId}`, `${row.id}`, {
         status: "Cancelled",
       });
-      await update(ref(db, `users/${row.userId}`), {
+
+      await updateAccountBalance(`${row.userId}`, {
         accountBalance: row.accountBalance + row.totalPaid,
       });
 
@@ -160,12 +160,9 @@ const ManageBooking = () => {
     setLoading(true);
 
     try {
-      await update(
-        ref(getDatabase(), `users/${row.userId}/bookings/${row.id}`),
-        {
-          status: "Checked-in",
-        }
-      );
+      await updateBookingStatus(`${row.userId}`, `${row.id}`, {
+        status: "Checked-in",
+      });
 
       setBookings(
         bookings.map((item) =>
