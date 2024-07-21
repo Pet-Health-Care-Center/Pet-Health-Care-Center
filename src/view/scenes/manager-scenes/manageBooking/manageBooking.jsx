@@ -93,7 +93,10 @@ const ManageBooking = () => {
   };
 
   const filteredBookings = bookings.filter((booking) => {
-    const matchesSearchQuery = booking.id.toLowerCase().includes(searchQuery);
+    console.log(searchQuery);
+    console.log(booking.bookingId);
+    const matchesSearchQuery = booking.bookingId.includes(searchQuery);
+    console.log(matchesSearchQuery);
     const matchesSelectedDate = selectedDate
       ? dayjs(booking.date).format("DD-MM-YYYY") ===
         dayjs(selectedDate).format("DD-MM-YYYY")
